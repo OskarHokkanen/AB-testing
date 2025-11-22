@@ -23,6 +23,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Student not found" }, { status: 404 });
     }
 
+    // Check if student has reached submission limit (max 3)
+    const submissionCount = (student as any).submissionCount || 0;
+    if (submissionCount >= 3) {
+      return NextResponse.json(
+        {
+          error:
+            "Maximum submission limit reached. You have used all 3 attempts.",
+        },
+        { status: 403 },
+      );
+    }
+
     // Calculate metrics
     const metrics = calculateMetrics(designChoices as DesignChoice[]);
 
@@ -36,19 +48,25 @@ export async function POST(request: Request) {
       aiReport = null;
     }
 
-    // Create submission
-    const submission = await prisma.submission.create({
-      data: {
-        studentId,
-        designChoices: JSON.stringify(designChoices),
-        conversionRate: metrics.conversionRate,
-        bounceRate: metrics.bounceRate,
-        clickThroughRate: metrics.clickThroughRate,
-        avgTimeOnPage: metrics.avgTimeOnPage,
-        cartAbandonmentRate: metrics.cartAbandonmentRate,
-        aiReport,
-      },
-    });
+    // Create submission and increment submission count in a transaction
+    const [submission] = await prisma.$transaction([
+      prisma.submission.create({
+        data: {
+          studentId,
+          designChoices: JSON.stringify(designChoices),
+          conversionRate: metrics.conversionRate,
+          bounceRate: metrics.bounceRate,
+          clickThroughRate: metrics.clickThroughRate,
+          avgTimeOnPage: metrics.avgTimeOnPage,
+          cartAbandonmentRate: metrics.cartAbandonmentRate,
+          aiReport,
+        },
+      }),
+      prisma.student.update({
+        where: { studentId },
+        data: { submissionCount: { increment: 1 } } as any,
+      }),
+    ]);
 
     return NextResponse.json({
       success: true,
@@ -66,6 +84,7 @@ export async function POST(request: Request) {
         screenshotPath: submission.screenshotPath,
         createdAt: submission.createdAt,
       },
+      remainingAttempts: 3 - (submissionCount + 1),
     });
   } catch (error) {
     console.error("Submission error:", error);

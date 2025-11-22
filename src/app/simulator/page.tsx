@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   FlaskConical,
@@ -11,12 +11,19 @@ import {
   Settings,
   Loader2,
   X,
+  Save,
+  AlertCircle,
 } from "lucide-react";
 import ShoppingWebsite from "@/components/ShoppingWebsite";
 import CustomizationPanel from "@/components/CustomizationPanel";
 import ResultsDisplay from "@/components/ResultsDisplay";
 import SubmissionHistory from "@/components/SubmissionHistory";
+import ConfirmationDialog from "@/components/ConfirmationDialog";
 import { DesignChoice } from "@/lib/metrics";
+import {
+  areAllDesignChoicesComplete,
+  getCompletionStatus,
+} from "@/lib/validation";
 
 interface Submission {
   id: string;
@@ -46,7 +53,12 @@ export default function SimulatorPage() {
   const [activeTab, setActiveTab] = useState<"preview" | "customize">(
     "customize",
   );
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [remainingAttempts, setRemainingAttempts] = useState(3);
   const websiteRef = useRef<HTMLDivElement>(null);
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     // Check if user is logged in
@@ -79,6 +91,7 @@ export default function SimulatorPage() {
         // Student is valid, set state
         setStudentId(storedStudentId);
         setStudentName(data.student.name);
+        setRemainingAttempts(data.student.remainingAttempts || 3);
 
         if (data.student.submissions) {
           setSubmissions(
@@ -107,24 +120,143 @@ export default function SimulatorPage() {
     verifyStudent();
   }, [router]);
 
+  // Load draft design choices on mount
+  useEffect(() => {
+    if (!studentId) return;
+
+    const loadDraft = async () => {
+      try {
+        console.log("[Draft] Loading draft for student:", studentId);
+        const response = await fetch(`/api/drafts?studentId=${studentId}`);
+        const data = await response.json();
+
+        if (data.success && data.draftDesignChoices.length > 0) {
+          console.log(
+            "[Draft] Loaded",
+            data.draftDesignChoices.length,
+            "design choices from draft",
+          );
+          setDesignChoices(data.draftDesignChoices);
+        } else {
+          console.log("[Draft] No draft found or draft is empty");
+        }
+      } catch (error) {
+        console.error("[Draft] Failed to load draft:", error);
+      }
+    };
+
+    loadDraft();
+  }, [studentId]);
+
+  const saveDraft = useCallback(async () => {
+    if (!studentId) return;
+
+    console.log(
+      "[Draft] Saving draft with",
+      designChoices.length,
+      "design choices",
+    );
+    setIsSavingDraft(true);
+    try {
+      const response = await fetch("/api/drafts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId, designChoices }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        console.log("[Draft] Successfully saved draft");
+        setLastSaved(new Date());
+      } else {
+        console.error("[Draft] Failed to save draft:", data.error);
+      }
+    } catch (error) {
+      console.error("[Draft] Error saving draft:", error);
+    } finally {
+      setIsSavingDraft(false);
+    }
+  }, [studentId, designChoices]);
+
+  // Auto-save draft when design choices change
+  useEffect(() => {
+    if (!studentId || selectedSubmission) {
+      console.log(
+        "[Draft] Auto-save skipped - studentId:",
+        studentId,
+        "selectedSubmission:",
+        !!selectedSubmission,
+      );
+      return;
+    }
+
+    // Clear existing timer
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+
+    console.log("[Draft] Auto-save scheduled in 2 seconds");
+    // Set new timer to save after 2 seconds of inactivity
+    autoSaveTimerRef.current = setTimeout(() => {
+      saveDraft();
+    }, 2000);
+
+    // Cleanup on unmount
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, [designChoices, studentId, selectedSubmission, saveDraft]);
+
+  const clearDraft = async () => {
+    if (!studentId) return;
+
+    try {
+      console.log("[Draft] Clearing draft for student:", studentId);
+      const response = await fetch(`/api/drafts?studentId=${studentId}`, {
+        method: "DELETE",
+      });
+      const data = await response.json();
+      if (data.success) {
+        console.log("[Draft] Successfully cleared draft");
+      } else {
+        console.error("[Draft] Failed to clear draft:", data.error);
+      }
+    } catch (error) {
+      console.error("[Draft] Error clearing draft:", error);
+    }
+  };
+
   const handleLogout = () => {
     sessionStorage.removeItem("studentId");
     sessionStorage.removeItem("studentData");
     router.push("/");
   };
 
-  const handleSubmit = async () => {
+  const handleSubmitClick = () => {
     if (!studentId || designChoices.length === 0) return;
 
-    // Validate all choices are complete
-    const incompleteChoice = designChoices.find(
-      (c) => !c.object || !c.action || !c.value,
-    );
-    if (incompleteChoice) {
-      alert("Please complete all design choices before submitting.");
+    // Validate all choices are complete (including reasoning)
+    if (!areAllDesignChoicesComplete(designChoices)) {
+      alert(
+        "Please complete all fields (element, action, value, and reasoning) for each design change before submitting.",
+      );
       return;
     }
 
+    // Check if student has remaining attempts
+    if (remainingAttempts <= 0) {
+      alert("You have used all 3 submission attempts.");
+      return;
+    }
+
+    // Show confirmation dialog
+    setShowConfirmDialog(true);
+  };
+
+  const handleSubmit = async () => {
+    setShowConfirmDialog(false);
     setIsSubmitting(true);
 
     try {
@@ -138,6 +270,8 @@ export default function SimulatorPage() {
       const data = await response.json();
 
       if (data.success) {
+        // Update remaining attempts
+        setRemainingAttempts(data.remainingAttempts || 0);
         // Try to generate screenshot
         if (websiteRef.current) {
           try {
@@ -180,12 +314,12 @@ export default function SimulatorPage() {
                 setSubmissions(updatedData.submissions);
                 setSelectedSubmission(updatedSubmission);
               } else {
-                // Fallback if we can't find the submission
+                // Fallback to original submission if fetch fails
                 setSubmissions([data.submission, ...submissions]);
                 setSelectedSubmission(data.submission);
               }
             } else {
-              // Fallback to original submission if fetch fails
+              // Fallback to original submission if screenshot fails
               setSubmissions([data.submission, ...submissions]);
               setSelectedSubmission(data.submission);
             }
@@ -201,8 +335,15 @@ export default function SimulatorPage() {
           setSelectedSubmission(data.submission);
         }
         setDesignChoices([]);
+        // Clear the draft after successful submission
+        await clearDraft();
+        setLastSaved(null);
       } else {
         alert(data.error || "Submission failed");
+        // If it's a limit reached error, update remaining attempts
+        if (data.error && data.error.includes("Maximum submission limit")) {
+          setRemainingAttempts(0);
+        }
       }
     } catch {
       alert("Connection error. Please try again.");
@@ -219,7 +360,10 @@ export default function SimulatorPage() {
   const handleNewExperiment = () => {
     setSelectedSubmission(null);
     setDesignChoices([]);
+    setLastSaved(null);
   };
+
+  const completionStatus = getCompletionStatus(designChoices);
 
   if (!studentId) {
     return (
@@ -242,9 +386,23 @@ export default function SimulatorPage() {
               </h1>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm font-medium text-gray-900">
-                {studentName || studentId}
-              </span>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm font-medium text-gray-900">
+                  {studentName || studentId}
+                </span>
+                <span
+                  className={`text-xs font-medium px-2 py-1 rounded-full ${
+                    remainingAttempts === 0
+                      ? "bg-red-100 text-red-700"
+                      : remainingAttempts === 1
+                        ? "bg-yellow-100 text-yellow-700"
+                        : "bg-green-100 text-green-700"
+                  }`}
+                >
+                  {remainingAttempts} attempt
+                  {remainingAttempts !== 1 ? "s" : ""} left
+                </span>
+              </div>
               <button
                 onClick={() => setShowHistory(!showHistory)}
                 className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
@@ -364,11 +522,56 @@ export default function SimulatorPage() {
                 onDesignChoicesChange={setDesignChoices}
               />
 
+              {/* Validation Status */}
+              {designChoices.length > 0 && (
+                <div className="mt-4 bg-white rounded-lg border border-gray-200 p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      {completionStatus.isValid ? (
+                        <>
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="text-sm font-medium text-green-700">
+                            All changes complete and ready to submit
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <AlertCircle className="w-4 h-4 text-amber-500" />
+                          <span className="text-sm font-medium text-amber-700">
+                            {completionStatus.incomplete} incomplete change
+                            {completionStatus.incomplete !== 1 ? "s" : ""} (
+                            {completionStatus.complete}/{completionStatus.total}{" "}
+                            complete)
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-2 text-xs text-gray-500">
+                      {isSavingDraft ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          <span>Saving...</span>
+                        </>
+                      ) : lastSaved ? (
+                        <>
+                          <Save className="w-3 h-3" />
+                          <span>Saved {lastSaved.toLocaleTimeString()}</span>
+                        </>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Submit Button */}
               <div className="mt-6">
                 <button
-                  onClick={handleSubmit}
-                  disabled={isSubmitting || designChoices.length === 0}
+                  onClick={handleSubmitClick}
+                  disabled={
+                    isSubmitting ||
+                    !completionStatus.isValid ||
+                    remainingAttempts <= 0
+                  }
                   className="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                 >
                   {isSubmitting ? (
@@ -384,11 +587,15 @@ export default function SimulatorPage() {
                   )}
                 </button>
                 <p className="text-sm text-gray-500 text-center mt-2">
-                  {designChoices.length === 0
-                    ? "Add at least one design change to submit"
-                    : `${designChoices.length} design change${
-                        designChoices.length !== 1 ? "s" : ""
-                      } ready to submit`}
+                  {remainingAttempts === 0
+                    ? "No submission attempts remaining"
+                    : designChoices.length === 0
+                      ? "Add at least one design change to submit"
+                      : !completionStatus.isValid
+                        ? "Complete all fields (including reasoning) to enable submission"
+                        : `${designChoices.length} design change${
+                            designChoices.length !== 1 ? "s" : ""
+                          } ready to submit`}
                 </p>
               </div>
             </div>
@@ -410,6 +617,15 @@ export default function SimulatorPage() {
           </div>
         )}
       </main>
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showConfirmDialog}
+        onConfirm={handleSubmit}
+        onCancel={() => setShowConfirmDialog(false)}
+        remainingAttempts={remainingAttempts}
+        isSubmitting={isSubmitting}
+      />
     </div>
   );
 }

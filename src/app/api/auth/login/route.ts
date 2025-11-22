@@ -29,12 +29,16 @@ export async function POST(request: Request) {
       );
     }
 
+    const submissionCount = (student as any).submissionCount || 0;
+
     return NextResponse.json({
       success: true,
       student: {
         id: student.id,
         studentId: student.studentId,
         name: student.name,
+        submissionCount: submissionCount,
+        remainingAttempts: 3 - submissionCount,
         submissions: student.submissions.map((submission) => ({
           id: submission.id,
           designChoices: submission.designChoices,

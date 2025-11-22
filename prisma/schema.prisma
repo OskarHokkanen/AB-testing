@@ -8,11 +8,13 @@ datasource db {
 }
 
 model Student {
-  id          String       @id @default(cuid())
-  studentId   String       @unique
-  name        String?
-  createdAt   DateTime     @default(now())
-  submissions Submission[]
+  id                 String       @id @default(cuid())
+  studentId          String       @unique
+  name               String?
+  draftDesignChoices String?      // JSON array of draft design choices
+  submissionCount    Int          @default(0) // Track number of submissions (max 3)
+  createdAt          DateTime     @default(now())
+  submissions        Submission[]
 }
 
 model Submission {
