@@ -39,10 +39,13 @@ export default function SimulatorPage() {
   const [studentName, setStudentName] = useState<string | null>(null);
   const [designChoices, setDesignChoices] = useState<DesignChoice[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
+  const [selectedSubmission, setSelectedSubmission] =
+    useState<Submission | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-  const [activeTab, setActiveTab] = useState<"preview" | "customize">("customize");
+  const [activeTab, setActiveTab] = useState<"preview" | "customize">(
+    "customize",
+  );
   const websiteRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -79,13 +82,18 @@ export default function SimulatorPage() {
 
         if (data.student.submissions) {
           setSubmissions(
-            data.student.submissions.map((s: { designChoices: string | DesignChoice[]; [key: string]: unknown }) => ({
-              ...s,
-              designChoices:
-                typeof s.designChoices === "string"
-                  ? JSON.parse(s.designChoices)
-                  : s.designChoices,
-            }))
+            data.student.submissions.map(
+              (s: {
+                designChoices: string | DesignChoice[];
+                [key: string]: unknown;
+              }) => ({
+                ...s,
+                designChoices:
+                  typeof s.designChoices === "string"
+                    ? JSON.parse(s.designChoices)
+                    : s.designChoices,
+              }),
+            ),
           );
         }
       } catch {
@@ -110,7 +118,7 @@ export default function SimulatorPage() {
 
     // Validate all choices are complete
     const incompleteChoice = designChoices.find(
-      (c) => !c.object || !c.action || !c.value
+      (c) => !c.object || !c.action || !c.value,
     );
     if (incompleteChoice) {
       alert("Please complete all design choices before submitting.");
@@ -156,14 +164,42 @@ export default function SimulatorPage() {
                 html,
               }),
             });
+
+            // Refetch all submissions to get the updated one with screenshot
+            const updatedResponse = await fetch(
+              `/api/submissions?studentId=${studentId}`,
+            );
+            const updatedData = await updatedResponse.json();
+
+            if (updatedData.success && updatedData.submissions.length > 0) {
+              // Find the newly created submission
+              const updatedSubmission = updatedData.submissions.find(
+                (s: Submission) => s.id === data.submission.id,
+              );
+              if (updatedSubmission) {
+                setSubmissions(updatedData.submissions);
+                setSelectedSubmission(updatedSubmission);
+              } else {
+                // Fallback if we can't find the submission
+                setSubmissions([data.submission, ...submissions]);
+                setSelectedSubmission(data.submission);
+              }
+            } else {
+              // Fallback to original submission if fetch fails
+              setSubmissions([data.submission, ...submissions]);
+              setSelectedSubmission(data.submission);
+            }
           } catch (screenshotError) {
             console.error("Screenshot generation failed:", screenshotError);
+            // Use original submission if screenshot fails
+            setSubmissions([data.submission, ...submissions]);
+            setSelectedSubmission(data.submission);
           }
+        } else {
+          // No screenshot needed, use original submission
+          setSubmissions([data.submission, ...submissions]);
+          setSelectedSubmission(data.submission);
         }
-
-        // Update submissions list
-        setSubmissions([data.submission, ...submissions]);
-        setSelectedSubmission(data.submission);
         setDesignChoices([]);
       } else {
         alert(data.error || "Submission failed");
@@ -242,7 +278,9 @@ export default function SimulatorPage() {
           />
           <div className="relative ml-auto w-full max-w-md bg-white shadow-xl overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-              <h2 className="font-semibold text-gray-900">Submission History</h2>
+              <h2 className="font-semibold text-gray-900">
+                Submission History
+              </h2>
               <button
                 onClick={() => setShowHistory(false)}
                 className="p-1 text-gray-500 hover:text-gray-700"
@@ -318,84 +356,53 @@ export default function SimulatorPage() {
           </div>
         ) : (
           /* Experiment View */
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left: Customization Panel */}
-            <div className="order-2 lg:order-1">
-              {/* Mobile Tabs */}
-              <div className="lg:hidden flex mb-4 bg-white rounded-lg p-1 border border-gray-200">
-                <button
-                  onClick={() => setActiveTab("customize")}
-                  className={`flex-1 flex items-center justify-center space-x-2 py-2 rounded-lg ${
-                    activeTab === "customize"
-                      ? "bg-indigo-600 text-white"
-                      : "text-gray-600"
-                  }`}
-                >
-                  <Settings className="w-4 h-4" />
-                  <span>Customize</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab("preview")}
-                  className={`flex-1 flex items-center justify-center space-x-2 py-2 rounded-lg ${
-                    activeTab === "preview"
-                      ? "bg-indigo-600 text-white"
-                      : "text-gray-600"
-                  }`}
-                >
-                  <Eye className="w-4 h-4" />
-                  <span>Preview</span>
-                </button>
-              </div>
+          <div className="space-y-6">
+            {/* Top: Customization Panel */}
+            <div>
+              <CustomizationPanel
+                designChoices={designChoices}
+                onDesignChoicesChange={setDesignChoices}
+              />
 
-              <div className={`${activeTab === "preview" ? "lg:block hidden" : ""}`}>
-                <CustomizationPanel
-                  designChoices={designChoices}
-                  onDesignChoicesChange={setDesignChoices}
-                />
-
-                {/* Submit Button */}
-                <div className="mt-6">
-                  <button
-                    onClick={handleSubmit}
-                    disabled={isSubmitting || designChoices.length === 0}
-                    className="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        <span>Processing...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-5 h-5" />
-                        <span>Submit Experiment</span>
-                      </>
-                    )}
-                  </button>
-                  <p className="text-sm text-gray-500 text-center mt-2">
-                    {designChoices.length === 0
-                      ? "Add at least one design change to submit"
-                      : `${designChoices.length} design change${
-                          designChoices.length !== 1 ? "s" : ""
-                        } ready to submit`}
-                  </p>
-                </div>
+              {/* Submit Button */}
+              <div className="mt-6">
+                <button
+                  onClick={handleSubmit}
+                  disabled={isSubmitting || designChoices.length === 0}
+                  className="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-5 h-5" />
+                      <span>Submit Experiment</span>
+                    </>
+                  )}
+                </button>
+                <p className="text-sm text-gray-500 text-center mt-2">
+                  {designChoices.length === 0
+                    ? "Add at least one design change to submit"
+                    : `${designChoices.length} design change${
+                        designChoices.length !== 1 ? "s" : ""
+                      } ready to submit`}
+                </p>
               </div>
             </div>
 
-            {/* Right: Website Preview */}
-            <div className={`order-1 lg:order-2 ${activeTab === "customize" ? "lg:block hidden" : ""}`}>
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden sticky top-20">
+            {/* Bottom: Full-Width Website Preview */}
+            <div>
+              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                 <div className="bg-gray-100 px-4 py-2 border-b border-gray-200 flex items-center space-x-2">
                   <Eye className="w-4 h-4 text-gray-500" />
                   <span className="text-sm font-medium text-gray-600">
                     Live Preview
                   </span>
                 </div>
-                <div
-                  ref={websiteRef}
-                  className="h-[800px] overflow-y-auto"
-                >
+                <div ref={websiteRef} className="h-[800px] overflow-y-auto">
                   <ShoppingWebsite designChoices={designChoices} />
                 </div>
               </div>

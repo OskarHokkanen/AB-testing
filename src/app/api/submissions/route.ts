@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     if (!studentId || !designChoices || !Array.isArray(designChoices)) {
       return NextResponse.json(
         { error: "Student ID and design choices are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -26,13 +26,14 @@ export async function POST(request: Request) {
     // Calculate metrics
     const metrics = calculateMetrics(designChoices as DesignChoice[]);
 
-    // Generate AI report
+    // Generate AI report (non-blocking - proceed even if it fails)
     let aiReport: string | null = null;
     try {
       aiReport = await generateReport(designChoices as DesignChoice[], metrics);
     } catch (error) {
       console.error("AI report generation failed:", error);
-      aiReport = "AI report generation failed. Please try again later.";
+      // Set to null so the user can still see results without the report
+      aiReport = null;
     }
 
     // Create submission
@@ -70,7 +71,7 @@ export async function POST(request: Request) {
     console.error("Submission error:", error);
     return NextResponse.json(
       { error: "Failed to process submission" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -82,7 +83,7 @@ export async function GET(request: Request) {
   if (!studentId) {
     return NextResponse.json(
       { error: "Student ID is required" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -113,7 +114,7 @@ export async function GET(request: Request) {
     console.error("Get submissions error:", error);
     return NextResponse.json(
       { error: "Failed to get submissions" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

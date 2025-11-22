@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     if (!submissionId || !html) {
       return NextResponse.json(
         { error: "Submission ID and HTML are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -22,13 +22,16 @@ export async function POST(request: Request) {
     });
 
     const page = await browser.newPage();
-    await page.setViewport({ width: 1280, height: 800 });
+    await page.setViewport({ width: 1280, height: 1080 });
 
     // Set the HTML content
     await page.setContent(html, { waitUntil: "networkidle0" });
 
-    // Take screenshot
-    const screenshot = await page.screenshot({ type: "png" });
+    // Take screenshot - fullPage captures entire page content
+    const screenshot = await page.screenshot({
+      type: "png",
+      fullPage: true,
+    });
     await browser.close();
 
     // Ensure screenshots directory exists
@@ -54,7 +57,7 @@ export async function POST(request: Request) {
     console.error("Screenshot error:", error);
     return NextResponse.json(
       { error: "Failed to generate screenshot" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

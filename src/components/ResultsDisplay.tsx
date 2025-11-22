@@ -163,11 +163,11 @@ export default function ResultsDisplay({
       )}
 
       {/* AI Report */}
-      {aiReport && (
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            AI Analysis Report
-          </h3>
+      <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          AI Analysis Report
+        </h3>
+        {aiReport ? (
           <div className="prose prose-indigo max-w-none">
             <style jsx>{`
               :global(.prose li > p) {
@@ -242,8 +242,17 @@ export default function ResultsDisplay({
               {aiReport}
             </ReactMarkdown>
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <p className="text-sm text-yellow-800">
+              <strong>AI report unavailable.</strong> The AI analysis service is
+              temporarily unavailable, but your submission was saved
+              successfully. You can still view your metrics and design choices
+              above.
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
