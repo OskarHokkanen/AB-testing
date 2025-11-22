@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Student {
+  id          String       @id @default(cuid())
+  studentId   String       @unique
+  name        String?
+  createdAt   DateTime     @default(now())
+  submissions Submission[]
+}
+
+model Submission {
+  id            String   @id @default(cuid())
+  studentId     String
+  student       Student  @relation(fields: [studentId], references: [studentId])
+
+  // Design choices stored as JSON
+  designChoices String   // JSON array of {object, action, value, reasoning}
+
+  // Calculated metrics
+  conversionRate      Float
+  bounceRate          Float
+  clickThroughRate    Float
+  avgTimeOnPage       Float
+  cartAbandonmentRate Float
+
+  // AI-generated report
+  aiReport      String?  // Markdown formatted report
+
+  // Screenshot path
+  screenshotPath String?
+
+  createdAt     DateTime @default(now())
+
+  @@index([studentId])
+}
+
+model AdminUser {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String   // hashed password
+  createdAt DateTime @default(now())
+}

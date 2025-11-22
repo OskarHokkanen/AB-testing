@@ -1,0 +1,546 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Shield,
+  Users,
+  FileText,
+  Plus,
+  Trash2,
+  ChevronDown,
+  ChevronRight,
+  LogOut,
+  Loader2,
+  Eye,
+} from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import { DesignChoice } from "@/lib/metrics";
+
+interface Submission {
+  id: string;
+  studentId: string;
+  designChoices: DesignChoice[];
+  metrics: {
+    conversionRate: number;
+    bounceRate: number;
+    clickThroughRate: number;
+    avgTimeOnPage: number;
+    cartAbandonmentRate: number;
+  };
+  aiReport: string | null;
+  screenshotPath: string | null;
+  createdAt: string;
+}
+
+interface Student {
+  id: string;
+  studentId: string;
+  name: string | null;
+  createdAt: string;
+  submissionCount: number;
+  submissions: Submission[];
+}
+
+export default function AdminPage() {
+  const router = useRouter();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+
+  const [students, setStudents] = useState<Student[]>([]);
+  const [expandedStudent, setExpandedStudent] = useState<string | null>(null);
+  const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
+
+  const [newStudentId, setNewStudentId] = useState("");
+  const [newStudentName, setNewStudentName] = useState("");
+  const [isAddingStudent, setIsAddingStudent] = useState(false);
+
+  useEffect(() => {
+    const adminData = sessionStorage.getItem("adminData");
+    if (adminData) {
+      setIsLoggedIn(true);
+      loadStudents();
+    }
+    setIsLoading(false);
+  }, []);
+
+  const loadStudents = async () => {
+    try {
+      const response = await fetch("/api/admin/students");
+      const data = await response.json();
+      if (data.success) {
+        setStudents(data.students);
+      }
+    } catch (error) {
+      console.error("Failed to load students:", error);
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError("");
+
+    try {
+      const response = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        sessionStorage.setItem("adminData", JSON.stringify(data.admin));
+        setIsLoggedIn(true);
+        loadStudents();
+      } else {
+        setLoginError(data.error || "Login failed");
+      }
+    } catch {
+      setLoginError("Connection error");
+    }
+  };
+
+  const handleLogout = () => {
+    sessionStorage.removeItem("adminData");
+    setIsLoggedIn(false);
+    router.push("/admin");
+  };
+
+  const handleAddStudent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newStudentId.trim()) return;
+
+    setIsAddingStudent(true);
+
+    try {
+      const response = await fetch("/api/admin/students", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentId: newStudentId.trim(),
+          name: newStudentName.trim() || null,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setStudents([data.student, ...students]);
+        setNewStudentId("");
+        setNewStudentName("");
+      } else {
+        alert(data.error || "Failed to add student");
+      }
+    } catch {
+      alert("Connection error");
+    } finally {
+      setIsAddingStudent(false);
+    }
+  };
+
+  const handleDeleteStudent = async (studentId: string) => {
+    if (!confirm(`Are you sure you want to delete student ${studentId} and all their submissions?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/students?studentId=${studentId}`, {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setStudents(students.filter((s) => s.studentId !== studentId));
+      } else {
+        alert(data.error || "Failed to delete student");
+      }
+    } catch {
+      alert("Connection error");
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      </div>
+    );
+  }
+
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full mb-4">
+              <Shield className="w-8 h-8 text-indigo-600" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Admin Login</h1>
+            <p className="text-gray-600">AB Testing Simulator Administration</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Username
+              </label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            {loginError && (
+              <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm">
+                {loginError}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-indigo-700"
+            >
+              Login
+            </button>
+          </form>
+
+          <p className="text-center text-xs text-gray-400 mt-6">
+            Default: admin / admin123
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      {/* Header */}
+      <header className="bg-gray-900 text-white">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Shield className="w-6 h-6" />
+              <h1 className="text-xl font-bold">Admin Dashboard</h1>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center space-x-2 px-3 py-2 hover:bg-gray-800 rounded-lg"
+            >
+              <LogOut className="w-5 h-5" />
+              <span>Logout</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 py-6">
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="bg-white rounded-lg p-6 border border-gray-200">
+            <div className="flex items-center space-x-3">
+              <Users className="w-8 h-8 text-indigo-600" />
+              <div>
+                <p className="text-sm text-gray-500">Total Students</p>
+                <p className="text-2xl font-bold text-gray-900">{students.length}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg p-6 border border-gray-200">
+            <div className="flex items-center space-x-3">
+              <FileText className="w-8 h-8 text-green-600" />
+              <div>
+                <p className="text-sm text-gray-500">Total Submissions</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {students.reduce((acc, s) => acc + s.submissionCount, 0)}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg p-6 border border-gray-200">
+            <div className="flex items-center space-x-3">
+              <Users className="w-8 h-8 text-purple-600" />
+              <div>
+                <p className="text-sm text-gray-500">Active Students</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {students.filter((s) => s.submissionCount > 0).length}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Add Student Form */}
+        <div className="bg-white rounded-lg p-6 border border-gray-200 mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Add New Student</h2>
+          <form onSubmit={handleAddStudent} className="flex gap-4">
+            <input
+              type="text"
+              placeholder="Student ID (required)"
+              value={newStudentId}
+              onChange={(e) => setNewStudentId(e.target.value)}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+            />
+            <input
+              type="text"
+              placeholder="Name (optional)"
+              value={newStudentName}
+              onChange={(e) => setNewStudentName(e.target.value)}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+            />
+            <button
+              type="submit"
+              disabled={isAddingStudent || !newStudentId.trim()}
+              className="flex items-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+            >
+              <Plus className="w-5 h-5" />
+              <span>Add Student</span>
+            </button>
+          </form>
+        </div>
+
+        {/* Students List */}
+        <div className="bg-white rounded-lg border border-gray-200">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">Students</h2>
+          </div>
+          <div className="divide-y divide-gray-200">
+            {students.length === 0 ? (
+              <div className="px-6 py-8 text-center text-gray-500">
+                No students registered yet.
+              </div>
+            ) : (
+              students.map((student) => (
+                <div key={student.id}>
+                  <div
+                    className="px-6 py-4 flex items-center justify-between cursor-pointer hover:bg-gray-50"
+                    onClick={() =>
+                      setExpandedStudent(
+                        expandedStudent === student.studentId ? null : student.studentId
+                      )
+                    }
+                  >
+                    <div className="flex items-center space-x-4">
+                      {expandedStudent === student.studentId ? (
+                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                      ) : (
+                        <ChevronRight className="w-5 h-5 text-gray-400" />
+                      )}
+                      <div>
+                        <p className="font-medium text-gray-900">{student.studentId}</p>
+                        {student.name && (
+                          <p className="text-sm text-gray-500">{student.name}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <span className="text-sm text-gray-500">
+                        {student.submissionCount} submission
+                        {student.submissionCount !== 1 ? "s" : ""}
+                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteStudent(student.studentId);
+                        }}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Expanded Submissions */}
+                  {expandedStudent === student.studentId && student.submissions.length > 0 && (
+                    <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
+                      <h4 className="text-sm font-medium text-gray-700 mb-3">
+                        Submissions
+                      </h4>
+                      <div className="space-y-2">
+                        {student.submissions.map((submission) => (
+                          <div
+                            key={submission.id}
+                            className="bg-white rounded-lg p-4 border border-gray-200"
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm text-gray-500">
+                                {new Date(submission.createdAt).toLocaleString()}
+                              </span>
+                              <button
+                                onClick={() => setSelectedSubmission(submission)}
+                                className="flex items-center space-x-1 text-indigo-600 hover:text-indigo-800 text-sm"
+                              >
+                                <Eye className="w-4 h-4" />
+                                <span>View Details</span>
+                              </button>
+                            </div>
+                            <div className="grid grid-cols-5 gap-2 text-sm">
+                              <div>
+                                <span className="text-gray-500">Conv:</span>{" "}
+                                <span className="font-medium">
+                                  {submission.metrics.conversionRate}%
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-gray-500">Bounce:</span>{" "}
+                                <span className="font-medium">
+                                  {submission.metrics.bounceRate}%
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-gray-500">CTR:</span>{" "}
+                                <span className="font-medium">
+                                  {submission.metrics.clickThroughRate}%
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-gray-500">Time:</span>{" "}
+                                <span className="font-medium">
+                                  {submission.metrics.avgTimeOnPage}s
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-gray-500">Cart:</span>{" "}
+                                <span className="font-medium">
+                                  {submission.metrics.cartAbandonmentRate}%
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </main>
+
+      {/* Submission Detail Modal */}
+      {selectedSubmission && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setSelectedSubmission(null)}
+          />
+          <div className="relative bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Submission Details
+              </h2>
+              <button
+                onClick={() => setSelectedSubmission(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6">
+              {/* Design Choices */}
+              <div className="mb-6">
+                <h3 className="font-medium text-gray-900 mb-3">Design Choices</h3>
+                <div className="space-y-2">
+                  {selectedSubmission.designChoices.map((choice, index) => (
+                    <div
+                      key={index}
+                      className="bg-gray-50 rounded-lg p-3 border border-gray-200"
+                    >
+                      <div className="text-sm">
+                        <span className="font-medium">{choice.object}</span> →{" "}
+                        {choice.action} →{" "}
+                        <span className="text-indigo-600">{choice.value}</span>
+                      </div>
+                      {choice.reasoning && (
+                        <p className="text-sm text-gray-500 mt-1 italic">
+                          &quot;{choice.reasoning}&quot;
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Metrics */}
+              <div className="mb-6">
+                <h3 className="font-medium text-gray-900 mb-3">Metrics</h3>
+                <div className="grid grid-cols-5 gap-4">
+                  <div className="bg-gray-50 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-gray-900">
+                      {selectedSubmission.metrics.conversionRate}%
+                    </p>
+                    <p className="text-sm text-gray-500">Conversion</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-gray-900">
+                      {selectedSubmission.metrics.bounceRate}%
+                    </p>
+                    <p className="text-sm text-gray-500">Bounce</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-gray-900">
+                      {selectedSubmission.metrics.clickThroughRate}%
+                    </p>
+                    <p className="text-sm text-gray-500">CTR</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-gray-900">
+                      {selectedSubmission.metrics.avgTimeOnPage}s
+                    </p>
+                    <p className="text-sm text-gray-500">Time</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-gray-900">
+                      {selectedSubmission.metrics.cartAbandonmentRate}%
+                    </p>
+                    <p className="text-sm text-gray-500">Cart Abandon</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Screenshot */}
+              {selectedSubmission.screenshotPath && (
+                <div className="mb-6">
+                  <h3 className="font-medium text-gray-900 mb-3">Screenshot</h3>
+                  <img
+                    src={selectedSubmission.screenshotPath}
+                    alt="Submission screenshot"
+                    className="w-full rounded-lg border border-gray-200"
+                  />
+                </div>
+              )}
+
+              {/* AI Report */}
+              {selectedSubmission.aiReport && (
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-3">AI Report</h3>
+                  <div className="prose prose-sm max-w-none bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <ReactMarkdown>{selectedSubmission.aiReport}</ReactMarkdown>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
