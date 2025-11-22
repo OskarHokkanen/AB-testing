@@ -47,29 +47,54 @@ export default function SimulatorPage() {
   useEffect(() => {
     // Check if user is logged in
     const storedStudentId = sessionStorage.getItem("studentId");
-    const storedData = sessionStorage.getItem("studentData");
 
     if (!storedStudentId) {
       router.push("/");
       return;
     }
 
-    setStudentId(storedStudentId);
+    // Verify the student ID is still valid in the database
+    const verifyStudent = async () => {
+      try {
+        const response = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ studentId: storedStudentId }),
+        });
 
-    if (storedData) {
-      const data = JSON.parse(storedData);
-      if (data.submissions) {
-        setSubmissions(
-          data.submissions.map((s: { designChoices: string | DesignChoice[]; [key: string]: unknown }) => ({
-            ...s,
-            designChoices:
-              typeof s.designChoices === "string"
-                ? JSON.parse(s.designChoices)
-                : s.designChoices,
-          }))
-        );
+        const data = await response.json();
+
+        if (!data.success) {
+          // Student ID no longer valid, clear session and redirect
+          sessionStorage.removeItem("studentId");
+          sessionStorage.removeItem("studentData");
+          router.push("/");
+          return;
+        }
+
+        // Student is valid, set state
+        setStudentId(storedStudentId);
+
+        if (data.student.submissions) {
+          setSubmissions(
+            data.student.submissions.map((s: { designChoices: string | DesignChoice[]; [key: string]: unknown }) => ({
+              ...s,
+              designChoices:
+                typeof s.designChoices === "string"
+                  ? JSON.parse(s.designChoices)
+                  : s.designChoices,
+            }))
+          );
+        }
+      } catch {
+        // Network error, redirect to login
+        sessionStorage.removeItem("studentId");
+        sessionStorage.removeItem("studentData");
+        router.push("/");
       }
-    }
+    };
+
+    verifyStudent();
   }, [router]);
 
   const handleLogout = () => {

@@ -12,8 +12,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if student exists, if not create them
-    let student = await prisma.student.findUnique({
+    // Check if student exists
+    const student = await prisma.student.findUnique({
       where: { studentId },
       include: {
         submissions: {
@@ -23,15 +23,10 @@ export async function POST(request: Request) {
     });
 
     if (!student) {
-      // Create new student
-      student = await prisma.student.create({
-        data: { studentId },
-        include: {
-          submissions: {
-            orderBy: { createdAt: "desc" },
-          },
-        },
-      });
+      return NextResponse.json(
+        { error: "Student ID not found. Please contact your instructor." },
+        { status: 401 }
+      );
     }
 
     return NextResponse.json({
