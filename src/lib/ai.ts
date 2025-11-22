@@ -1,13 +1,14 @@
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { DesignChoice, MetricsResult } from "./metrics";
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+const client = new OpenAI({
+  baseURL: process.env.OPENAI_BASE_URL,
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 export async function generateReport(
   designChoices: DesignChoice[],
-  metrics: MetricsResult
+  metrics: MetricsResult,
 ): Promise<string> {
   const prompt = `You are an expert in UX design and A/B testing for e-commerce websites. A computer science student has made the following design changes to a simulated shopping website as part of an educational exercise on A/B testing.
 
@@ -21,7 +22,7 @@ ${designChoices
 - **Action:** ${choice.action}
 - **New Value:** ${choice.value}
 - **Student's Reasoning:** ${choice.reasoning || "No reasoning provided"}
-`
+`,
   )
   .join("\n")}
 
@@ -49,24 +50,21 @@ Generate an educational report analyzing the student's design choices. The repor
 Keep the tone educational and encouraging. Use markdown formatting for readability. Be specific about UX principles and cite them where relevant (e.g., Fitts's Law, visual hierarchy, color psychology, etc.).`;
 
   try {
-    const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 2000,
+    const completion = await client.chat.completions.create({
+      model: "gpt-5-chat",
       messages: [
         {
           role: "user",
           content: prompt,
         },
       ],
+      max_tokens: 2000,
     });
 
-    // Extract text from the response
-    const textContent = message.content.find((block) => block.type === "text");
-    if (textContent && textContent.type === "text") {
-      return textContent.text;
-    }
-
-    return "Unable to generate report. Please try again.";
+    return (
+      completion.choices[0].message.content ||
+      "Unable to generate report. Please try again."
+    );
   } catch (error) {
     console.error("Error generating AI report:", error);
     throw new Error("Failed to generate AI report");

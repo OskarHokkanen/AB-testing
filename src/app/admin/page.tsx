@@ -15,6 +15,7 @@ import {
   Eye,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { DesignChoice } from "@/lib/metrics";
 
 interface Submission {
@@ -52,7 +53,8 @@ export default function AdminPage() {
 
   const [students, setStudents] = useState<Student[]>([]);
   const [expandedStudent, setExpandedStudent] = useState<string | null>(null);
-  const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
+  const [selectedSubmission, setSelectedSubmission] =
+    useState<Submission | null>(null);
 
   const [newStudentId, setNewStudentId] = useState("");
   const [newStudentName, setNewStudentName] = useState("");
@@ -143,14 +145,21 @@ export default function AdminPage() {
   };
 
   const handleDeleteStudent = async (studentId: string) => {
-    if (!confirm(`Are you sure you want to delete student ${studentId} and all their submissions?`)) {
+    if (
+      !confirm(
+        `Are you sure you want to delete student ${studentId} and all their submissions?`,
+      )
+    ) {
       return;
     }
 
     try {
-      const response = await fetch(`/api/admin/students?studentId=${studentId}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `/api/admin/students?studentId=${studentId}`,
+        {
+          method: "DELETE",
+        },
+      );
 
       const data = await response.json();
 
@@ -180,7 +189,9 @@ export default function AdminPage() {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full mb-4">
               <Shield className="w-8 h-8 text-indigo-600" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Admin Login</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              Admin Login
+            </h1>
             <p className="text-gray-600">AB Testing Simulator Administration</p>
           </div>
 
@@ -259,7 +270,9 @@ export default function AdminPage() {
               <Users className="w-8 h-8 text-indigo-600" />
               <div>
                 <p className="text-sm text-gray-500">Total Students</p>
-                <p className="text-2xl font-bold text-gray-900">{students.length}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {students.length}
+                </p>
               </div>
             </div>
           </div>
@@ -289,7 +302,9 @@ export default function AdminPage() {
 
         {/* Add Student Form */}
         <div className="bg-white rounded-lg p-6 border border-gray-200 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Add New Student</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            Add New Student
+          </h2>
           <form onSubmit={handleAddStudent} className="flex gap-4">
             <input
               type="text"
@@ -333,7 +348,9 @@ export default function AdminPage() {
                     className="px-6 py-4 flex items-center justify-between cursor-pointer hover:bg-gray-50"
                     onClick={() =>
                       setExpandedStudent(
-                        expandedStudent === student.studentId ? null : student.studentId
+                        expandedStudent === student.studentId
+                          ? null
+                          : student.studentId,
                       )
                     }
                   >
@@ -344,9 +361,13 @@ export default function AdminPage() {
                         <ChevronRight className="w-5 h-5 text-gray-400" />
                       )}
                       <div>
-                        <p className="font-medium text-gray-900">{student.studentId}</p>
+                        <p className="font-medium text-gray-900">
+                          {student.studentId}
+                        </p>
                         {student.name && (
-                          <p className="text-sm text-gray-500">{student.name}</p>
+                          <p className="text-sm text-gray-500">
+                            {student.name}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -368,66 +389,71 @@ export default function AdminPage() {
                   </div>
 
                   {/* Expanded Submissions */}
-                  {expandedStudent === student.studentId && student.submissions.length > 0 && (
-                    <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
-                      <h4 className="text-sm font-medium text-gray-700 mb-3">
-                        Submissions
-                      </h4>
-                      <div className="space-y-2">
-                        {student.submissions.map((submission) => (
-                          <div
-                            key={submission.id}
-                            className="bg-white rounded-lg p-4 border border-gray-200"
-                          >
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-sm text-gray-500">
-                                {new Date(submission.createdAt).toLocaleString()}
-                              </span>
-                              <button
-                                onClick={() => setSelectedSubmission(submission)}
-                                className="flex items-center space-x-1 text-indigo-600 hover:text-indigo-800 text-sm"
-                              >
-                                <Eye className="w-4 h-4" />
-                                <span>View Details</span>
-                              </button>
+                  {expandedStudent === student.studentId &&
+                    student.submissions.length > 0 && (
+                      <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
+                        <h4 className="text-sm font-medium text-gray-700 mb-3">
+                          Submissions
+                        </h4>
+                        <div className="space-y-2">
+                          {student.submissions.map((submission) => (
+                            <div
+                              key={submission.id}
+                              className="bg-white rounded-lg p-4 border border-gray-200"
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm text-gray-500">
+                                  {new Date(
+                                    submission.createdAt,
+                                  ).toLocaleString()}
+                                </span>
+                                <button
+                                  onClick={() =>
+                                    setSelectedSubmission(submission)
+                                  }
+                                  className="flex items-center space-x-1 text-indigo-600 hover:text-indigo-800 text-sm"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                  <span>View Details</span>
+                                </button>
+                              </div>
+                              <div className="grid grid-cols-5 gap-2 text-sm">
+                                <div>
+                                  <span className="text-gray-500">Conv:</span>{" "}
+                                  <span className="font-medium">
+                                    {submission.metrics.conversionRate}%
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500">Bounce:</span>{" "}
+                                  <span className="font-medium">
+                                    {submission.metrics.bounceRate}%
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500">CTR:</span>{" "}
+                                  <span className="font-medium">
+                                    {submission.metrics.clickThroughRate}%
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500">Time:</span>{" "}
+                                  <span className="font-medium">
+                                    {submission.metrics.avgTimeOnPage}s
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500">Cart:</span>{" "}
+                                  <span className="font-medium">
+                                    {submission.metrics.cartAbandonmentRate}%
+                                  </span>
+                                </div>
+                              </div>
                             </div>
-                            <div className="grid grid-cols-5 gap-2 text-sm">
-                              <div>
-                                <span className="text-gray-500">Conv:</span>{" "}
-                                <span className="font-medium">
-                                  {submission.metrics.conversionRate}%
-                                </span>
-                              </div>
-                              <div>
-                                <span className="text-gray-500">Bounce:</span>{" "}
-                                <span className="font-medium">
-                                  {submission.metrics.bounceRate}%
-                                </span>
-                              </div>
-                              <div>
-                                <span className="text-gray-500">CTR:</span>{" "}
-                                <span className="font-medium">
-                                  {submission.metrics.clickThroughRate}%
-                                </span>
-                              </div>
-                              <div>
-                                <span className="text-gray-500">Time:</span>{" "}
-                                <span className="font-medium">
-                                  {submission.metrics.avgTimeOnPage}s
-                                </span>
-                              </div>
-                              <div>
-                                <span className="text-gray-500">Cart:</span>{" "}
-                                <span className="font-medium">
-                                  {submission.metrics.cartAbandonmentRate}%
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                 </div>
               ))
             )}
@@ -457,7 +483,9 @@ export default function AdminPage() {
             <div className="p-6">
               {/* Design Choices */}
               <div className="mb-6">
-                <h3 className="font-medium text-gray-900 mb-3">Design Choices</h3>
+                <h3 className="font-medium text-gray-900 mb-3">
+                  Design Choices
+                </h3>
                 <div className="space-y-2">
                   {selectedSubmission.designChoices.map((choice, index) => (
                     <div
@@ -533,7 +561,85 @@ export default function AdminPage() {
                 <div>
                   <h3 className="font-medium text-gray-900 mb-3">AI Report</h3>
                   <div className="prose prose-sm max-w-none bg-gray-50 rounded-lg p-4 border border-gray-200">
-                    <ReactMarkdown>{selectedSubmission.aiReport}</ReactMarkdown>
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        ul: ({ node, ...props }) => (
+                          <ul
+                            className="list-disc list-inside my-4 space-y-2"
+                            {...props}
+                          />
+                        ),
+                        ol: ({ node, ...props }) => (
+                          <ol
+                            className="list-decimal list-inside my-4 space-y-2"
+                            {...props}
+                          />
+                        ),
+                        li: ({ node, ...props }) => (
+                          <li className="ml-4" {...props} />
+                        ),
+                        table: ({ node, ...props }) => (
+                          <div className="overflow-x-auto my-4">
+                            <table
+                              className="min-w-full divide-y divide-gray-200"
+                              {...props}
+                            />
+                          </div>
+                        ),
+                        thead: ({ node, ...props }) => (
+                          <thead className="bg-gray-50" {...props} />
+                        ),
+                        tbody: ({ node, ...props }) => (
+                          <tbody
+                            className="bg-white divide-y divide-gray-200"
+                            {...props}
+                          />
+                        ),
+                        tr: ({ node, ...props }) => <tr {...props} />,
+                        th: ({ node, ...props }) => (
+                          <th
+                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            {...props}
+                          />
+                        ),
+                        td: ({ node, ...props }) => (
+                          <td
+                            className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                            {...props}
+                          />
+                        ),
+                        h1: ({ node, ...props }) => (
+                          <h1
+                            className="text-2xl font-bold mt-6 mb-4"
+                            {...props}
+                          />
+                        ),
+                        h2: ({ node, ...props }) => (
+                          <h2
+                            className="text-xl font-bold mt-5 mb-3"
+                            {...props}
+                          />
+                        ),
+                        h3: ({ node, ...props }) => (
+                          <h3
+                            className="text-lg font-semibold mt-4 mb-2"
+                            {...props}
+                          />
+                        ),
+                        p: ({ node, ...props }) => (
+                          <p className="my-3 leading-relaxed" {...props} />
+                        ),
+                        strong: ({ node, ...props }) => (
+                          <strong
+                            className="font-semibold text-gray-900"
+                            {...props}
+                          />
+                        ),
+                      }}
+                    >
+                      {selectedSubmission.aiReport}
+                    </ReactMarkdown>
                   </div>
                 </div>
               )}

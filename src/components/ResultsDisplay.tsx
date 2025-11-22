@@ -2,6 +2,7 @@
 
 import React from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   TrendingUp,
   TrendingDown,
@@ -67,8 +68,8 @@ function MetricCard({
               isImproved
                 ? "text-green-600"
                 : isWorse
-                ? "text-red-600"
-                : "text-gray-500"
+                  ? "text-red-600"
+                  : "text-gray-500"
             }`}
           >
             {isImproved ? (
@@ -168,7 +169,71 @@ export default function ResultsDisplay({
             AI Analysis Report
           </h3>
           <div className="prose prose-indigo max-w-none">
-            <ReactMarkdown>{aiReport}</ReactMarkdown>
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                ul: ({ node, ...props }) => (
+                  <ul
+                    className="list-disc list-inside my-4 space-y-2"
+                    {...props}
+                  />
+                ),
+                ol: ({ node, ...props }) => (
+                  <ol
+                    className="list-decimal list-inside my-4 space-y-2"
+                    {...props}
+                  />
+                ),
+                li: ({ node, ...props }) => <li className="ml-4" {...props} />,
+                table: ({ node, ...props }) => (
+                  <div className="overflow-x-auto my-4">
+                    <table
+                      className="min-w-full divide-y divide-gray-200"
+                      {...props}
+                    />
+                  </div>
+                ),
+                thead: ({ node, ...props }) => (
+                  <thead className="bg-gray-50" {...props} />
+                ),
+                tbody: ({ node, ...props }) => (
+                  <tbody
+                    className="bg-white divide-y divide-gray-200"
+                    {...props}
+                  />
+                ),
+                tr: ({ node, ...props }) => <tr {...props} />,
+                th: ({ node, ...props }) => (
+                  <th
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    {...props}
+                  />
+                ),
+                td: ({ node, ...props }) => (
+                  <td
+                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                    {...props}
+                  />
+                ),
+                h1: ({ node, ...props }) => (
+                  <h1 className="text-2xl font-bold mt-6 mb-4" {...props} />
+                ),
+                h2: ({ node, ...props }) => (
+                  <h2 className="text-xl font-bold mt-5 mb-3" {...props} />
+                ),
+                h3: ({ node, ...props }) => (
+                  <h3 className="text-lg font-semibold mt-4 mb-2" {...props} />
+                ),
+                p: ({ node, ...props }) => (
+                  <p className="my-3 leading-relaxed" {...props} />
+                ),
+                strong: ({ node, ...props }) => (
+                  <strong className="font-semibold text-gray-900" {...props} />
+                ),
+              }}
+            >
+              {aiReport}
+            </ReactMarkdown>
           </div>
         </div>
       )}

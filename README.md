@@ -42,9 +42,9 @@ npm install
 # Copy the example env file
 cp .env.example .env
 
-# Edit .env and add your Anthropic API key
+# Edit .env and add your OpenAI API key
 # DATABASE_URL="file:./dev.db"
-# ANTHROPIC_API_KEY="your-anthropic-api-key-here"
+# OPENAI_API_KEY="your-openai-api-key-here"
 ```
 
 4. Initialize the database:
@@ -114,7 +114,7 @@ npm run dev
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
 - **Database**: SQLite with Prisma ORM
-- **AI**: Anthropic Claude API (claude-sonnet-4-20250514)
+- **AI**: Any OpenAI API compatible 
 - **Screenshots**: Puppeteer (server-side)
 - **Icons**: Lucide React
 
@@ -171,7 +171,7 @@ AB-testing/
 | Variable | Description | Required |
 |----------|-------------|----------|
 | `DATABASE_URL` | SQLite database path | Yes |
-| `ANTHROPIC_API_KEY` | Anthropic API key for Claude | Yes |
+| `OPENAI_API_KEY` | OpenAI API key | Yes |
 | `NEXT_PUBLIC_BASE_URL` | Base URL for the application | No |
 
 ### Metrics Calculation
