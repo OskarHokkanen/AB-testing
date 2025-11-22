@@ -36,6 +36,7 @@ interface Submission {
 export default function SimulatorPage() {
   const router = useRouter();
   const [studentId, setStudentId] = useState<string | null>(null);
+  const [studentName, setStudentName] = useState<string | null>(null);
   const [designChoices, setDesignChoices] = useState<DesignChoice[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
@@ -74,6 +75,7 @@ export default function SimulatorPage() {
 
         // Student is valid, set state
         setStudentId(storedStudentId);
+        setStudentName(data.student.name);
 
         if (data.student.submissions) {
           setSubmissions(
@@ -204,8 +206,8 @@ export default function SimulatorPage() {
               </h1>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">
-                Student: <strong>{studentId}</strong>
+              <span className="text-sm font-medium text-gray-900">
+                {studentName || studentId}
               </span>
               <button
                 onClick={() => setShowHistory(!showHistory)}
@@ -392,8 +394,7 @@ export default function SimulatorPage() {
                 </div>
                 <div
                   ref={websiteRef}
-                  className="h-[600px] overflow-y-auto"
-                  style={{ transform: "scale(0.9)", transformOrigin: "top left", width: "111.11%" }}
+                  className="h-[800px] overflow-y-auto"
                 >
                   <ShoppingWebsite designChoices={designChoices} />
                 </div>

@@ -59,6 +59,10 @@ export default function AdminPage() {
   const [newStudentId, setNewStudentId] = useState("");
   const [newStudentName, setNewStudentName] = useState("");
   const [isAddingStudent, setIsAddingStudent] = useState(false);
+  const [bulkCount, setBulkCount] = useState(10);
+  const [bulkNamePrefix, setBulkNamePrefix] = useState("");
+  const [bulkStartNumber, setBulkStartNumber] = useState(1);
+  const [isGeneratingBulk, setIsGeneratingBulk] = useState(false);
 
   useEffect(() => {
     const adminData = sessionStorage.getItem("adminData");
@@ -170,6 +174,45 @@ export default function AdminPage() {
       }
     } catch {
       alert("Connection error");
+    }
+  };
+
+  const handleBulkGenerate = async () => {
+    if (bulkCount < 1 || bulkCount > 100) {
+      alert("Please enter a number between 1 and 100");
+      return;
+    }
+
+    setIsGeneratingBulk(true);
+
+    try {
+      const response = await fetch("/api/admin/students/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          count: bulkCount,
+          namePrefix: bulkNamePrefix.trim() || null,
+          startNumber: bulkStartNumber,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setStudents([...data.students, ...students]);
+        const nameInfo = bulkNamePrefix.trim()
+          ? ` named "${bulkNamePrefix} ${bulkStartNumber}" to "${bulkNamePrefix} ${bulkStartNumber + data.count - 1}"`
+          : "";
+        alert(`Successfully created ${data.count} students${nameInfo}`);
+        // Update start number for next batch
+        setBulkStartNumber(bulkStartNumber + data.count);
+      } else {
+        alert(data.error || "Failed to generate students");
+      }
+    } catch {
+      alert("Connection error");
+    } finally {
+      setIsGeneratingBulk(false);
     }
   };
 
@@ -329,6 +372,80 @@ export default function AdminPage() {
               <span>Add Student</span>
             </button>
           </form>
+        </div>
+
+        {/* Bulk Generate Students */}
+        <div className="bg-white rounded-lg p-6 border border-gray-200 mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Bulk Generate Students</h2>
+          <p className="text-sm text-gray-500 mb-4">
+            Generate multiple students with randomly generated GUIDs as their student IDs.
+            Optionally assign names with a prefix (e.g., &quot;User&quot;, &quot;Group&quot;, &quot;Student&quot;).
+          </p>
+          <div className="flex flex-wrap gap-4 items-end">
+            <div className="flex flex-col gap-1">
+              <label htmlFor="bulkCount" className="text-sm text-gray-600">
+                Count
+              </label>
+              <input
+                type="number"
+                id="bulkCount"
+                min={1}
+                max={100}
+                value={bulkCount}
+                onChange={(e) => setBulkCount(Math.min(100, Math.max(1, parseInt(e.target.value) || 1)))}
+                className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="bulkNamePrefix" className="text-sm text-gray-600">
+                Name Prefix (optional)
+              </label>
+              <input
+                type="text"
+                id="bulkNamePrefix"
+                placeholder="e.g., User, Group, Student"
+                value={bulkNamePrefix}
+                onChange={(e) => setBulkNamePrefix(e.target.value)}
+                className="w-48 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="bulkStartNumber" className="text-sm text-gray-600">
+                Start #
+              </label>
+              <input
+                type="number"
+                id="bulkStartNumber"
+                min={1}
+                value={bulkStartNumber}
+                onChange={(e) => setBulkStartNumber(Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleBulkGenerate}
+              disabled={isGeneratingBulk}
+              className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50"
+            >
+              {isGeneratingBulk ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Generating...</span>
+                </>
+              ) : (
+                <>
+                  <Users className="w-5 h-5" />
+                  <span>Generate Students</span>
+                </>
+              )}
+            </button>
+          </div>
+          {bulkNamePrefix.trim() && (
+            <p className="text-sm text-gray-500 mt-3">
+              Preview: Names will be &quot;{bulkNamePrefix} {bulkStartNumber}&quot; through &quot;{bulkNamePrefix} {bulkStartNumber + bulkCount - 1}&quot;
+            </p>
+          )}
         </div>
 
         {/* Students List */}
