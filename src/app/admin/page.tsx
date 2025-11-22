@@ -376,10 +376,13 @@ export default function AdminPage() {
 
         {/* Bulk Generate Students */}
         <div className="bg-white rounded-lg p-6 border border-gray-200 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Bulk Generate Students</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            Bulk Generate Students
+          </h2>
           <p className="text-sm text-gray-500 mb-4">
-            Generate multiple students with randomly generated GUIDs as their student IDs.
-            Optionally assign names with a prefix (e.g., &quot;User&quot;, &quot;Group&quot;, &quot;Student&quot;).
+            Generate multiple students with randomly generated GUIDs as their
+            student IDs. Optionally assign names with a prefix (e.g.,
+            &quot;User&quot;, &quot;Group&quot;, &quot;Student&quot;).
           </p>
           <div className="flex flex-wrap gap-4 items-end">
             <div className="flex flex-col gap-1">
@@ -392,7 +395,11 @@ export default function AdminPage() {
                 min={1}
                 max={100}
                 value={bulkCount}
-                onChange={(e) => setBulkCount(Math.min(100, Math.max(1, parseInt(e.target.value) || 1)))}
+                onChange={(e) =>
+                  setBulkCount(
+                    Math.min(100, Math.max(1, parseInt(e.target.value) || 1)),
+                  )
+                }
                 className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
               />
             </div>
@@ -410,7 +417,10 @@ export default function AdminPage() {
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label htmlFor="bulkStartNumber" className="text-sm text-gray-600">
+              <label
+                htmlFor="bulkStartNumber"
+                className="text-sm text-gray-600"
+              >
                 Start #
               </label>
               <input
@@ -418,7 +428,9 @@ export default function AdminPage() {
                 id="bulkStartNumber"
                 min={1}
                 value={bulkStartNumber}
-                onChange={(e) => setBulkStartNumber(Math.max(1, parseInt(e.target.value) || 1))}
+                onChange={(e) =>
+                  setBulkStartNumber(Math.max(1, parseInt(e.target.value) || 1))
+                }
                 className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
               />
             </div>
@@ -443,7 +455,9 @@ export default function AdminPage() {
           </div>
           {bulkNamePrefix.trim() && (
             <p className="text-sm text-gray-500 mt-3">
-              Preview: Names will be &quot;{bulkNamePrefix} {bulkStartNumber}&quot; through &quot;{bulkNamePrefix} {bulkStartNumber + bulkCount - 1}&quot;
+              Preview: Names will be &quot;{bulkNamePrefix} {bulkStartNumber}
+              &quot; through &quot;{bulkNamePrefix}{" "}
+              {bulkStartNumber + bulkCount - 1}&quot;
             </p>
           )}
         </div>
@@ -678,23 +692,33 @@ export default function AdminPage() {
                 <div>
                   <h3 className="font-medium text-gray-900 mb-3">AI Report</h3>
                   <div className="prose prose-sm max-w-none bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <style jsx>{`
+                      :global(.prose li > p) {
+                        display: inline;
+                        margin: 0;
+                      }
+                      :global(.prose li) {
+                        margin-top: 0.25rem;
+                        margin-bottom: 0.25rem;
+                      }
+                    `}</style>
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
                       components={{
                         ul: ({ node, ...props }) => (
                           <ul
-                            className="list-disc list-inside my-4 space-y-2"
+                            className="list-disc list-outside ml-6 my-4"
                             {...props}
                           />
                         ),
                         ol: ({ node, ...props }) => (
                           <ol
-                            className="list-decimal list-inside my-4 space-y-2"
+                            className="list-decimal list-outside ml-6 my-4"
                             {...props}
                           />
                         ),
                         li: ({ node, ...props }) => (
-                          <li className="ml-4" {...props} />
+                          <li className="pl-2" {...props} />
                         ),
                         table: ({ node, ...props }) => (
                           <div className="overflow-x-auto my-4">

@@ -39,7 +39,9 @@ export default function SubmissionHistory({
   return (
     <div className="bg-white rounded-lg border border-gray-200">
       <div className="px-6 py-4 border-b border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900">Previous Submissions</h3>
+        <h3 className="text-lg font-semibold text-gray-900">
+          Previous Submissions
+        </h3>
       </div>
       <div className="divide-y divide-gray-200">
         {submissions.map((submission) => (
@@ -65,10 +67,12 @@ export default function SubmissionHistory({
                 {submission.designChoices.length} design change
                 {submission.designChoices.length !== 1 ? "s" : ""}
               </div>
-              <div className="text-sm text-gray-500 mt-1">
-                Conversion: {submission.metrics.conversionRate}% | Bounce:{" "}
-                {submission.metrics.bounceRate}%
-              </div>
+              {submission.metrics && (
+                <div className="text-sm text-gray-500 mt-1">
+                  Conversion: {submission.metrics.conversionRate}% | Bounce:{" "}
+                  {submission.metrics.bounceRate}%
+                </div>
+              )}
             </div>
             <ChevronRight className="w-5 h-5 text-gray-400" />
           </button>

@@ -8,7 +8,7 @@ export async function POST(request: Request) {
     if (!studentId || typeof studentId !== "string") {
       return NextResponse.json(
         { error: "Student ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     if (!student) {
       return NextResponse.json(
         { error: "Student ID not found. Please contact your instructor." },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -35,14 +35,27 @@ export async function POST(request: Request) {
         id: student.id,
         studentId: student.studentId,
         name: student.name,
-        submissions: student.submissions,
+        submissions: student.submissions.map((submission) => ({
+          id: submission.id,
+          designChoices: submission.designChoices,
+          metrics: {
+            conversionRate: submission.conversionRate,
+            bounceRate: submission.bounceRate,
+            clickThroughRate: submission.clickThroughRate,
+            avgTimeOnPage: submission.avgTimeOnPage,
+            cartAbandonmentRate: submission.cartAbandonmentRate,
+          },
+          aiReport: submission.aiReport,
+          screenshotPath: submission.screenshotPath,
+          createdAt: submission.createdAt,
+        })),
       },
     });
   } catch (error) {
     console.error("Login error:", error);
     return NextResponse.json(
       { error: "Failed to authenticate" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -169,22 +169,29 @@ export default function ResultsDisplay({
             AI Analysis Report
           </h3>
           <div className="prose prose-indigo max-w-none">
+            <style jsx>{`
+              :global(.prose li > p) {
+                display: inline;
+                margin: 0;
+              }
+              :global(.prose li) {
+                margin-top: 0.25rem;
+                margin-bottom: 0.25rem;
+              }
+            `}</style>
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
                 ul: ({ node, ...props }) => (
-                  <ul
-                    className="list-disc list-inside my-4 space-y-2"
-                    {...props}
-                  />
+                  <ul className="list-disc list-outside ml-6 my-4" {...props} />
                 ),
                 ol: ({ node, ...props }) => (
                   <ol
-                    className="list-decimal list-inside my-4 space-y-2"
+                    className="list-decimal list-outside ml-6 my-4"
                     {...props}
                   />
                 ),
-                li: ({ node, ...props }) => <li className="ml-4" {...props} />,
+                li: ({ node, ...props }) => <li className="pl-2" {...props} />,
                 table: ({ node, ...props }) => (
                   <div className="overflow-x-auto my-4">
                     <table
