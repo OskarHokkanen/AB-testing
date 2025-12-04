@@ -84,14 +84,17 @@ function getPositionForElement(
   if (!choice) return "";
 
   const positionMap: Record<string, string> = {
-    "Top Right": "absolute top-2 right-2",
-    Center: "mx-auto",
-    "Bottom Right": "absolute bottom-2 right-2",
-    Sticky: "sticky bottom-4 z-10",
-    "Below Price": "",
-    "Next to Image": "absolute right-4 top-1/2 -translate-y-1/2",
-    Floating: "sticky bottom-4 right-4 z-10 ml-auto",
-    "Bottom of Card": "mt-auto",
+    // Checkout button positions
+    "Top Right": "checkout-top-right",
+    Center: "checkout-center",
+    "Bottom Right": "checkout-bottom-right",
+    Sticky: "checkout-sticky",
+    // Add to Cart positions
+    "Below Price": "cart-below-price",
+    "Next to Image": "cart-next-image",
+    Floating: "cart-floating",
+    "Bottom of Card": "cart-bottom-card",
+    // Other positions
     "Above Image": "order-first",
     "Below Image": "order-last",
     "Overlay on Image":
@@ -104,13 +107,15 @@ function getPositionForElement(
     Footer: "mt-8",
     Header: "mb-4",
     "Product Page": "",
-    "Top of Page": "order-first",
-    "After Navigation": "",
-    "Mid Page": "",
-    "Next to Title": "inline-block ml-2",
-    "Below Title": "block mt-1",
-    "Near Button": "mb-2",
-    Prominent: "text-2xl font-bold",
+    // Hero banner positions
+    "Top of Page": "hero-top",
+    "After Navigation": "hero-after-nav",
+    "Mid Page": "hero-mid",
+    // Price positions
+    "Next to Title": "price-next-title",
+    "Below Title": "price-below-title",
+    "Near Button": "price-near-button",
+    Prominent: "price-prominent",
   };
 
   return positionMap[choice.value] || "";
@@ -182,14 +187,21 @@ function getStyleForElement2(
   if (!choice) return "";
 
   const styleMap: Record<string, string> = {
+    // Navigation styles
     Minimal: "text-sm",
-    Standard: "",
+    Standard: "nav-standard",
     "Mega Menu": "text-base",
     Hamburger: "",
-    "Image Only": "",
-    "Image with Text": "",
-    "Video Background": "",
-    Carousel: "",
+    // Hero banner styles
+    "Image Only": "hero-image-only",
+    "Image with Text": "hero-image-text",
+    "Video Background": "hero-video-bg",
+    Carousel: "hero-carousel",
+    // Product image styles
+    "With Zoom": "image-zoom",
+    "360 View": "image-360",
+    Gallery: "image-gallery",
+    // Trust badge styles
     Icons: "",
     "Icons with Text": "",
     Text: "",
@@ -307,6 +319,7 @@ export default function ShoppingWebsite({
     "Hero Banner",
     designChoices,
   );
+  const heroBannerStyle = getStyleForElement2("Hero Banner", designChoices);
   const heroCTA = getCTATextForElement("Hero Banner", designChoices);
 
   const navColorStyle =
@@ -321,6 +334,7 @@ export default function ShoppingWebsite({
     "Change Size",
     designChoices,
   );
+  const imageStyle = getStyleForElement2("Product Image", designChoices);
   const imageBorder = getBorderForElement("Product Image", designChoices);
   const imageBadge = getBadgeForElement("Product Image", designChoices);
 
@@ -446,26 +460,54 @@ export default function ShoppingWebsite({
       )}
 
       <div className={isLeftNavigation ? "flex-1 overflow-y-auto" : ""}>
-        {/* Hero Banner */}
-        {heroBannerPosition !== "hidden" && (
+        {/* Hero Banner - Top of Page or After Navigation */}
+        {heroBannerPosition !== "hidden" && (heroBannerPosition === "hero-top" || heroBannerPosition === "hero-after-nav" || heroBannerPosition === "") && (
           <div
             onClick={(e) => handleElementClick("Hero Banner", e)}
-            className={`bg-gradient-to-r from-indigo-600 to-purple-600 text-white ${heroBannerSize || "py-16"} ${heroBannerPosition} ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-white hover:ring-inset transition-all" : ""}`}
+            className={`${
+              heroBannerStyle === "hero-image-only" ? "bg-cover bg-center" :
+              heroBannerStyle === "hero-video-bg" ? "bg-black relative" :
+              heroBannerStyle === "hero-carousel" ? "relative" :
+              "bg-gradient-to-r from-indigo-600 to-purple-600"
+            } text-white ${
+              heroBannerSize === "text-sm py-1 px-2" ? "py-8" :
+              heroBannerSize === "text-base py-2 px-4" ? "py-16" :
+              heroBannerSize === "text-lg py-3 px-6" ? "py-24" :
+              heroBannerSize === "text-xl py-4 px-8" ? "min-h-screen flex items-center" :
+              "py-16"
+            } ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-white hover:ring-inset transition-all" : ""}`}
+            style={heroBannerStyle === "hero-image-only" ? {backgroundImage: "url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 1200 600%22%3E%3Crect fill=%22%236366f1%22 width=%221200%22 height=%22600%22/%3E%3C/svg%3E')"} : {}}
           >
-            <div className="max-w-7xl mx-auto px-4">
-              <div className="flex flex-col md:flex-row items-center justify-between">
-                <div className="mb-8 md:mb-0">
-                  <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                    Summer Sale
-                  </h1>
-                  <p className="text-xl mb-6 text-indigo-100">
-                    Up to 50% off on selected items
-                  </p>
-                  <button className="bg-white text-indigo-600 px-8 py-3 rounded-lg font-semibold hover:bg-indigo-50 transition-colors">
-                    {heroCTA}
-                  </button>
+            <div className="max-w-7xl mx-auto px-4 relative z-10">
+              {heroBannerStyle === "hero-video-bg" && (
+                <div className="absolute inset-0 opacity-50">
+                  <div className="w-full h-full bg-gradient-to-r from-purple-900 to-indigo-900 animate-pulse"></div>
                 </div>
-                <div className="text-8xl">🛍️</div>
+              )}
+              <div className="flex flex-col md:flex-row items-center justify-between relative">
+                {(heroBannerStyle !== "hero-image-only") && (
+                  <div className="mb-8 md:mb-0">
+                    <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                      Summer Sale
+                    </h1>
+                    <p className="text-xl mb-6 text-indigo-100">
+                      Up to 50% off on selected items
+                    </p>
+                    <button className="bg-white text-indigo-600 px-8 py-3 rounded-lg font-semibold hover:bg-indigo-50 transition-colors">
+                      {heroCTA}
+                    </button>
+                  </div>
+                )}
+                {(heroBannerStyle === "hero-image-text" || heroBannerStyle === "" || !heroBannerStyle) && (
+                  <div className="text-8xl">🛍️</div>
+                )}
+                {heroBannerStyle === "hero-carousel" && (
+                  <div className="flex space-x-2 mt-4">
+                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                    <div className="w-2 h-2 bg-white/50 rounded-full"></div>
+                    <div className="w-2 h-2 bg-white/50 rounded-full"></div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -499,6 +541,58 @@ export default function ShoppingWebsite({
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 py-8">
+          {/* Hero Banner - Mid Page */}
+          {heroBannerPosition === "hero-mid" && (
+            <div
+              onClick={(e) => handleElementClick("Hero Banner", e)}
+              className={`mb-8 ${
+                heroBannerStyle === "hero-image-only" ? "bg-cover bg-center" :
+                heroBannerStyle === "hero-video-bg" ? "bg-black relative" :
+                heroBannerStyle === "hero-carousel" ? "relative" :
+                "bg-gradient-to-r from-indigo-600 to-purple-600"
+              } text-white ${
+                heroBannerSize === "text-sm py-1 px-2" ? "py-8" :
+                heroBannerSize === "text-base py-2 px-4" ? "py-16" :
+                heroBannerSize === "text-lg py-3 px-6" ? "py-24" :
+                heroBannerSize === "text-xl py-4 px-8" ? "py-32" :
+                "py-16"
+              } rounded-lg ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-white hover:ring-inset transition-all" : ""}`}
+              style={heroBannerStyle === "hero-image-only" ? {backgroundImage: "url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 1200 600%22%3E%3Crect fill=%22%236366f1%22 width=%221200%22 height=%22600%22/%3E%3C/svg%3E')"} : {}}
+            >
+              <div className="px-4 relative z-10">
+                {heroBannerStyle === "hero-video-bg" && (
+                  <div className="absolute inset-0 opacity-50 rounded-lg overflow-hidden">
+                    <div className="w-full h-full bg-gradient-to-r from-purple-900 to-indigo-900 animate-pulse"></div>
+                  </div>
+                )}
+                <div className="flex flex-col md:flex-row items-center justify-between relative">
+                  {(heroBannerStyle !== "hero-image-only") && (
+                    <div className="mb-8 md:mb-0">
+                      <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                        Summer Sale
+                      </h1>
+                      <p className="text-xl mb-6 text-indigo-100">
+                        Up to 50% off on selected items
+                      </p>
+                      <button className="bg-white text-indigo-600 px-8 py-3 rounded-lg font-semibold hover:bg-indigo-50 transition-colors">
+                        {heroCTA}
+                      </button>
+                    </div>
+                  )}
+                  {(heroBannerStyle === "hero-image-text" || heroBannerStyle === "" || !heroBannerStyle) && (
+                    <div className="text-8xl">🛍️</div>
+                  )}
+                  {heroBannerStyle === "hero-carousel" && (
+                    <div className="flex space-x-2 mt-4">
+                      <div className="w-2 h-2 bg-white rounded-full"></div>
+                      <div className="w-2 h-2 bg-white/50 rounded-full"></div>
+                      <div className="w-2 h-2 bg-white/50 rounded-full"></div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
           <h2 className="text-2xl font-bold text-gray-900 mb-6">
             Featured Products
           </h2>
@@ -508,29 +602,81 @@ export default function ShoppingWebsite({
             {products.map((product) => (
               <div
                 key={product.id}
-                className={`bg-white rounded-lg overflow-hidden hover:shadow-lg transition-shadow ${imageBorder}`}
+                className={`bg-white rounded-lg overflow-hidden hover:shadow-lg transition-shadow ${imageBorder} ${addToCartPosition === "cart-next-image" ? "flex" : ""} relative`}
               >
-                {/* Product Image */}
-                <div
-                  onClick={(e) => handleElementClick("Product Image", e)}
-                  className={`relative bg-gray-100 p-8 text-center ${imageSize} ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-indigo-400 hover:ring-inset transition-all" : ""}`}
-                >
-                  <span className="text-6xl">{product.image}</span>
-                  {imageBadge && (
-                    <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
-                      {imageBadge}
+                {/* Product Image with potential button next to it */}
+                <div className={`${addToCartPosition === "cart-next-image" ? "flex-shrink-0" : ""}`}>
+                  <div
+                    onClick={(e) => handleElementClick("Product Image", e)}
+                    className={`relative bg-gray-100 p-8 text-center ${imageSize} ${
+                      imageStyle === "image-zoom" ? "overflow-hidden group" :
+                      imageStyle === "image-360" ? "overflow-hidden relative" :
+                      imageStyle === "image-gallery" ? "relative" :
+                      ""
+                    } ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-indigo-400 hover:ring-inset transition-all" : ""}`}
+                  >
+                    <span className={`text-6xl ${
+                      imageStyle === "image-zoom" ? "group-hover:scale-125 transition-transform duration-300" :
+                      imageStyle === "image-360" ? "inline-block hover:rotate-45 transition-transform duration-500" :
+                      ""
+                    }`}>
+                      {product.image}
                     </span>
-                  )}
+                    {imageBadge && (
+                      <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded z-10">
+                        {imageBadge}
+                      </span>
+                    )}
+                    {imageStyle === "image-360" && (
+                      <div className="absolute bottom-2 right-2 text-xs text-gray-500 bg-white px-2 py-1 rounded">
+                        360°
+                      </div>
+                    )}
+                    {imageStyle === "image-gallery" && (
+                      <div className="absolute bottom-2 left-2 right-2 flex justify-center space-x-1">
+                        <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></div>
+                        <div className="w-1.5 h-1.5 bg-gray-300 rounded-full"></div>
+                        <div className="w-1.5 h-1.5 bg-gray-300 rounded-full"></div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
+                {/* Add to Cart Button - Next to Image */}
+                {addToCartPosition === "cart-next-image" && (
+                  <div className="flex items-center p-4">
+                    <button
+                      onClick={(e) => handleElementClick("Add to Cart Button", e)}
+                      className={`text-white rounded-lg transition-colors ${addToCartColorStyle} ${addToCartSizeStyle} ${onElementClick ? "hover:ring-2 hover:ring-indigo-400 hover:ring-offset-2" : ""}`}
+                    >
+                      {addToCartText}
+                    </button>
+                  </div>
+                )}
+
                 {/* Product Info */}
-                <div className="p-4">
-                  <h3
-                    onClick={(e) => handleElementClick("Product Title", e)}
-                    className={`${titleSizeStyle} ${titleColorStyle} ${titleFontStyle} mb-2 ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-indigo-400 hover:ring-inset transition-all rounded" : ""}`}
-                  >
-                    {product.name}
-                  </h3>
+                <div className={`p-4 ${addToCartPosition === "cart-bottom-card" ? "flex flex-col h-full" : ""}`}>
+                  {/* Title and Price Container */}
+                  <div className={`${pricePosition === "price-next-title" ? "flex items-center justify-between mb-2" : ""}`}>
+                    <h3
+                      onClick={(e) => handleElementClick("Product Title", e)}
+                      className={`${titleSizeStyle} ${titleColorStyle} ${titleFontStyle} ${pricePosition === "price-next-title" ? "" : "mb-2"} ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-indigo-400 hover:ring-inset transition-all rounded" : ""}`}
+                    >
+                      {product.name}
+                    </h3>
+
+                    {/* Price - Next to Title */}
+                    {pricePosition === "price-next-title" && (
+                      <div
+                        onClick={(e) => handleElementClick("Product Price", e)}
+                        className={`${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-indigo-400 hover:ring-inset transition-all rounded" : ""}`}
+                      >
+                        <span className={`${priceSizeStyle} ${priceColorStyle} font-bold`}>
+                          ${product.price.toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
 
                   {/* Rating */}
                   <div className="flex items-center mb-2">
@@ -547,45 +693,58 @@ export default function ShoppingWebsite({
                     </span>
                   </div>
 
-                  {/* Price */}
-                  <div
-                    onClick={(e) => handleElementClick("Product Price", e)}
-                    className={`mb-4 ${pricePosition} ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-indigo-400 hover:ring-inset transition-all rounded inline-block" : ""}`}
-                  >
-                    <span
-                      className={`${priceSizeStyle} ${priceColorStyle} font-bold`}
+                  {/* Price - Default and Other Positions */}
+                  {pricePosition !== "price-next-title" && (
+                    <div
+                      onClick={(e) => handleElementClick("Product Price", e)}
+                      className={`${
+                        pricePosition === "price-near-button" ? "mb-2" :
+                        pricePosition === "price-prominent" ? "mb-4 text-2xl font-bold" :
+                        pricePosition === "price-below-title" ? "mb-4" :
+                        "mb-4"
+                      } ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-indigo-400 hover:ring-inset transition-all rounded inline-block" : ""}`}
                     >
-                      ${product.price.toFixed(2)}
-                    </span>
-                    {discountStyle.showOriginal && (
-                      <span className="text-sm text-gray-400 line-through ml-2">
-                        ${product.originalPrice.toFixed(2)}
+                      <span className={`${priceSizeStyle} ${priceColorStyle} font-bold`}>
+                        ${product.price.toFixed(2)}
                       </span>
-                    )}
-                    {discountStyle.showPercent && (
-                      <span className="text-sm text-green-600 ml-2">
-                        {Math.round(
-                          (1 - product.price / product.originalPrice) * 100,
-                        )}
-                        % OFF
-                      </span>
-                    )}
-                    {discountStyle.showAmount && (
-                      <span className="text-sm text-green-600 ml-2">
-                        Save $
-                        {(product.originalPrice - product.price).toFixed(2)}
-                      </span>
-                    )}
-                  </div>
+                      {discountStyle.showOriginal && (
+                        <span className="text-sm text-gray-400 line-through ml-2">
+                          ${product.originalPrice.toFixed(2)}
+                        </span>
+                      )}
+                      {discountStyle.showPercent && (
+                        <span className="text-sm text-green-600 ml-2">
+                          {Math.round((1 - product.price / product.originalPrice) * 100)}% OFF
+                        </span>
+                      )}
+                      {discountStyle.showAmount && (
+                        <span className="text-sm text-green-600 ml-2">
+                          Save ${(product.originalPrice - product.price).toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+                  )}
 
-                  {/* Add to Cart Button */}
+                  {/* Add to Cart Button - Below Price (default) and Bottom of Card */}
+                  {addToCartPosition !== "cart-next-image" && addToCartPosition !== "cart-floating" && (
+                    <button
+                      onClick={(e) => handleElementClick("Add to Cart Button", e)}
+                      className={`w-full text-white rounded-lg transition-colors ${addToCartColorStyle} ${addToCartSizeStyle} ${addToCartPosition === "cart-bottom-card" ? "mt-auto" : ""} ${onElementClick ? "hover:ring-2 hover:ring-indigo-400 hover:ring-offset-2" : ""}`}
+                    >
+                      {addToCartText}
+                    </button>
+                  )}
+                </div>
+
+                {/* Add to Cart Button - Floating */}
+                {addToCartPosition === "cart-floating" && (
                   <button
                     onClick={(e) => handleElementClick("Add to Cart Button", e)}
-                    className={`w-full text-white rounded-lg transition-colors ${addToCartColorStyle} ${addToCartSizeStyle} ${addToCartPosition} ${onElementClick ? "hover:ring-2 hover:ring-indigo-400 hover:ring-offset-2" : ""}`}
+                    className={`absolute bottom-4 right-4 text-white rounded-lg transition-colors shadow-lg ${addToCartColorStyle} ${addToCartSizeStyle} ${onElementClick ? "hover:ring-2 hover:ring-indigo-400 hover:ring-offset-2" : ""}`}
                   >
                     {addToCartText}
                   </button>
-                </div>
+                )}
               </div>
             ))}
           </div>
@@ -628,24 +787,58 @@ export default function ShoppingWebsite({
         </main>
 
         {/* Cart Summary / Checkout */}
-        <div
-          className={`bg-white border-t border-gray-200 py-4 ${checkoutPosition}`}
-        >
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600">3 items in cart</p>
-                <p className="text-xl font-bold">Total: $489.97</p>
+        {checkoutPosition !== "checkout-top-right" &&
+         checkoutPosition !== "checkout-bottom-right" &&
+         checkoutPosition !== "checkout-sticky" && (
+          <div
+            className={`bg-white border-t border-gray-200 py-4 ${checkoutPosition === "checkout-center" ? "flex justify-center" : ""}`}
+          >
+            <div className={`${checkoutPosition === "checkout-center" ? "text-center" : "max-w-7xl mx-auto px-4"}`}>
+              <div className={`flex items-center ${checkoutPosition === "checkout-center" ? "flex-col space-y-4" : "justify-between"}`}>
+                <div>
+                  <p className="text-gray-600">3 items in cart</p>
+                  <p className="text-xl font-bold">Total: $489.97</p>
+                </div>
+                <button
+                  onClick={(e) => handleElementClick("Checkout Button", e)}
+                  className={`text-white rounded-lg transition-colors ${checkoutColorStyle} ${checkoutSizeStyle} ${onElementClick ? "hover:ring-2 hover:ring-indigo-400 hover:ring-offset-2" : ""}`}
+                >
+                  {checkoutText}
+                </button>
               </div>
-              <button
-                onClick={(e) => handleElementClick("Checkout Button", e)}
-                className={`text-white rounded-lg transition-colors ${checkoutColorStyle} ${checkoutSizeStyle} ${onElementClick ? "hover:ring-2 hover:ring-indigo-400 hover:ring-offset-2" : ""}`}
-              >
-                {checkoutText}
-              </button>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Checkout Button - Special Positions */}
+        {checkoutPosition === "checkout-top-right" && (
+          <button
+            onClick={(e) => handleElementClick("Checkout Button", e)}
+            className={`fixed top-20 right-4 z-50 text-white rounded-lg transition-colors shadow-lg ${checkoutColorStyle} ${checkoutSizeStyle} ${onElementClick ? "hover:ring-2 hover:ring-indigo-400 hover:ring-offset-2" : ""}`}
+          >
+            {checkoutText}
+          </button>
+        )}
+
+        {checkoutPosition === "checkout-bottom-right" && (
+          <button
+            onClick={(e) => handleElementClick("Checkout Button", e)}
+            className={`fixed bottom-4 right-4 z-50 text-white rounded-lg transition-colors shadow-lg ${checkoutColorStyle} ${checkoutSizeStyle} ${onElementClick ? "hover:ring-2 hover:ring-indigo-400 hover:ring-offset-2" : ""}`}
+          >
+            {checkoutText}
+          </button>
+        )}
+
+        {checkoutPosition === "checkout-sticky" && (
+          <div className="sticky bottom-4 z-50 px-4">
+            <button
+              onClick={(e) => handleElementClick("Checkout Button", e)}
+              className={`w-full text-white rounded-lg transition-colors shadow-lg ${checkoutColorStyle} ${checkoutSizeStyle} ${onElementClick ? "hover:ring-2 hover:ring-indigo-400 hover:ring-offset-2" : ""}`}
+            >
+              {checkoutText}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
