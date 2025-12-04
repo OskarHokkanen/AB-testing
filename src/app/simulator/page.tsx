@@ -19,6 +19,7 @@ import CustomizationPanel from "@/components/CustomizationPanel";
 import ResultsDisplay from "@/components/ResultsDisplay";
 import SubmissionHistory from "@/components/SubmissionHistory";
 import ConfirmationDialog from "@/components/ConfirmationDialog";
+import EditElementModal from "@/components/EditElementModal";
 import { DesignChoice } from "@/lib/metrics";
 import {
   areAllDesignChoicesComplete,
@@ -57,6 +58,8 @@ export default function SimulatorPage() {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [remainingAttempts, setRemainingAttempts] = useState(3);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedElement, setSelectedElement] = useState<string>("");
   const websiteRef = useRef<HTMLDivElement>(null);
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -363,6 +366,18 @@ export default function SimulatorPage() {
     setLastSaved(null);
   };
 
+  const handleElementClick = (elementName: string) => {
+    // Only allow editing when not viewing a submission
+    if (!selectedSubmission) {
+      setSelectedElement(elementName);
+      setShowEditModal(true);
+    }
+  };
+
+  const handleSaveChange = (newChoice: DesignChoice) => {
+    setDesignChoices([...designChoices, newChoice]);
+  };
+
   const completionStatus = getCompletionStatus(designChoices);
 
   if (!studentId) {
@@ -610,7 +625,10 @@ export default function SimulatorPage() {
                   </span>
                 </div>
                 <div ref={websiteRef} className="h-[800px] overflow-y-auto">
-                  <ShoppingWebsite designChoices={designChoices} />
+                  <ShoppingWebsite
+                    designChoices={designChoices}
+                    onElementClick={handleElementClick}
+                  />
                 </div>
               </div>
             </div>
@@ -625,6 +643,15 @@ export default function SimulatorPage() {
         onCancel={() => setShowConfirmDialog(false)}
         remainingAttempts={remainingAttempts}
         isSubmitting={isSubmitting}
+      />
+
+      {/* Edit Element Modal */}
+      <EditElementModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        elementName={selectedElement}
+        designChoices={designChoices}
+        onSaveChange={handleSaveChange}
       />
     </div>
   );

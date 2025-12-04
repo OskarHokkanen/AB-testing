@@ -14,6 +14,7 @@ import { DesignChoice } from "@/lib/metrics";
 
 interface ShoppingWebsiteProps {
   designChoices: DesignChoice[];
+  onElementClick?: (elementName: string) => void;
 }
 
 // Helper to get style based on design choices
@@ -246,6 +247,7 @@ function getCTATextForElement(
 
 export default function ShoppingWebsite({
   designChoices,
+  onElementClick,
 }: ShoppingWebsiteProps) {
   // Get styles for various elements
   const checkoutColorStyle =
@@ -370,6 +372,13 @@ export default function ShoppingWebsite({
 
   const isLeftNavigation = navPosition === "w-64 shrink-0";
 
+  const handleElementClick = (elementName: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onElementClick) {
+      onElementClick(elementName);
+    }
+  };
+
   return (
     <div
       className={`bg-gray-50 min-h-full ${isLeftNavigation ? "flex" : ""}`}
@@ -378,7 +387,8 @@ export default function ShoppingWebsite({
       {/* Navigation */}
       {navPosition !== "hidden" && (
         <nav
-          className={`${navColorStyle} shadow-sm border-b border-gray-200 ${navPosition} ${isLeftNavigation ? "border-b-0 border-r" : ""}`}
+          onClick={(e) => handleElementClick("Navigation", e)}
+          className={`${navColorStyle} shadow-sm border-b border-gray-200 ${navPosition} ${isLeftNavigation ? "border-b-0 border-r" : ""} ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-indigo-400 hover:ring-inset transition-all" : ""}`}
         >
           <div className={isLeftNavigation ? "p-4" : "max-w-7xl mx-auto px-4"}>
             <div
@@ -439,7 +449,8 @@ export default function ShoppingWebsite({
         {/* Hero Banner */}
         {heroBannerPosition !== "hidden" && (
           <div
-            className={`bg-gradient-to-r from-indigo-600 to-purple-600 text-white ${heroBannerSize || "py-16"} ${heroBannerPosition}`}
+            onClick={(e) => handleElementClick("Hero Banner", e)}
+            className={`bg-gradient-to-r from-indigo-600 to-purple-600 text-white ${heroBannerSize || "py-16"} ${heroBannerPosition} ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-white hover:ring-inset transition-all" : ""}`}
           >
             <div className="max-w-7xl mx-auto px-4">
               <div className="flex flex-col md:flex-row items-center justify-between">
@@ -464,7 +475,8 @@ export default function ShoppingWebsite({
         {(trustPosition === "mb-4" ||
           (trustPosition === "" && trustVisibility !== "hidden")) && (
           <div
-            className={`bg-gray-100 py-3 border-b ${trustVisibility} ${trustPosition}`}
+            onClick={(e) => handleElementClick("Trust Badges", e)}
+            className={`bg-gray-100 py-3 border-b ${trustVisibility} ${trustPosition} ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-indigo-400 hover:ring-inset transition-all" : ""}`}
           >
             <div className="max-w-7xl mx-auto px-4">
               <div className="flex justify-center space-x-8 text-sm text-gray-600">
@@ -500,7 +512,8 @@ export default function ShoppingWebsite({
               >
                 {/* Product Image */}
                 <div
-                  className={`relative bg-gray-100 p-8 text-center ${imageSize}`}
+                  onClick={(e) => handleElementClick("Product Image", e)}
+                  className={`relative bg-gray-100 p-8 text-center ${imageSize} ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-indigo-400 hover:ring-inset transition-all" : ""}`}
                 >
                   <span className="text-6xl">{product.image}</span>
                   {imageBadge && (
@@ -513,7 +526,8 @@ export default function ShoppingWebsite({
                 {/* Product Info */}
                 <div className="p-4">
                   <h3
-                    className={`${titleSizeStyle} ${titleColorStyle} ${titleFontStyle} mb-2`}
+                    onClick={(e) => handleElementClick("Product Title", e)}
+                    className={`${titleSizeStyle} ${titleColorStyle} ${titleFontStyle} mb-2 ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-indigo-400 hover:ring-inset transition-all rounded" : ""}`}
                   >
                     {product.name}
                   </h3>
@@ -534,7 +548,10 @@ export default function ShoppingWebsite({
                   </div>
 
                   {/* Price */}
-                  <div className={`mb-4 ${pricePosition}`}>
+                  <div
+                    onClick={(e) => handleElementClick("Product Price", e)}
+                    className={`mb-4 ${pricePosition} ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-indigo-400 hover:ring-inset transition-all rounded inline-block" : ""}`}
+                  >
                     <span
                       className={`${priceSizeStyle} ${priceColorStyle} font-bold`}
                     >
@@ -563,7 +580,8 @@ export default function ShoppingWebsite({
 
                   {/* Add to Cart Button */}
                   <button
-                    className={`w-full text-white rounded-lg transition-colors ${addToCartColorStyle} ${addToCartSizeStyle} ${addToCartPosition}`}
+                    onClick={(e) => handleElementClick("Add to Cart Button", e)}
+                    className={`w-full text-white rounded-lg transition-colors ${addToCartColorStyle} ${addToCartSizeStyle} ${addToCartPosition} ${onElementClick ? "hover:ring-2 hover:ring-indigo-400 hover:ring-offset-2" : ""}`}
                   >
                     {addToCartText}
                   </button>
@@ -576,7 +594,8 @@ export default function ShoppingWebsite({
           {(trustPosition === "" || trustPosition === "mt-8") &&
             trustVisibility !== "hidden" && (
               <div
-                className={`mt-12 bg-white rounded-lg p-6 ${trustVisibility} ${trustPosition}`}
+                onClick={(e) => handleElementClick("Trust Badges", e)}
+                className={`mt-12 bg-white rounded-lg p-6 ${trustVisibility} ${trustPosition} ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-indigo-400 transition-all" : ""}`}
               >
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
                   <div className="flex flex-col items-center">
@@ -619,7 +638,8 @@ export default function ShoppingWebsite({
                 <p className="text-xl font-bold">Total: $489.97</p>
               </div>
               <button
-                className={`text-white rounded-lg transition-colors ${checkoutColorStyle} ${checkoutSizeStyle}`}
+                onClick={(e) => handleElementClick("Checkout Button", e)}
+                className={`text-white rounded-lg transition-colors ${checkoutColorStyle} ${checkoutSizeStyle} ${onElementClick ? "hover:ring-2 hover:ring-indigo-400 hover:ring-offset-2" : ""}`}
               >
                 {checkoutText}
               </button>
