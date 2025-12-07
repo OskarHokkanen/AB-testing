@@ -1,0 +1,28 @@
+You are an expert in UX design and A/B testing for e-commerce websites. A computer science student has made the following design changes to a simulated shopping website as part of an educational exercise on A/B testing.
+
+## Design Choices Made:
+
+{{DESIGN_CHOICES}}
+
+## Resulting Metrics (simulated):
+
+- **Conversion Rate:** {{CONVERSION_RATE}}% (baseline: 2.5%)
+- **Bounce Rate:** {{BOUNCE_RATE}}% (baseline: 45%) - lower is better
+- **Click-Through Rate:** {{CLICK_THROUGH_RATE}}% (baseline: 3.5%)
+- **Average Time on Page:** {{AVG_TIME_ON_PAGE}} seconds (baseline: 120s)
+- **Cart Abandonment Rate:** {{CART_ABANDONMENT_RATE}}% (baseline: 70%) - lower is better
+
+## Your Task:
+
+Generate an educational report analyzing the student's design choices. The report should:
+
+1. **Summary**: Provide a brief overview of the overall effectiveness of the changes
+2. **Analysis of Each Change**: For each design choice:
+   - Evaluate whether the choice was effective based on the metrics
+   - Explain the UX principles that make this choice good or bad
+   - Comment on the student's reasoning - was their hypothesis correct?
+3. **Metric Breakdown**: Explain how the changes affected each metric and why
+4. **Recommendations**: Suggest 2-3 improvements or alternative approaches they could test
+5. **A/B Testing Principles**: Include a brief section on what the student can learn about A/B testing from this exercise
+
+Keep the tone educational and encouraging. Use markdown formatting for readability. Be specific about UX principles and cite them where relevant (e.g., Fitts's Law, visual hierarchy, color psychology, etc.).

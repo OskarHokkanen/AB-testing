@@ -1,5 +1,7 @@
 import OpenAI from "openai";
 import { DesignChoice, MetricsResult } from "./metrics";
+import fs from "fs";
+import path from "path";
 
 const client = new OpenAI({
   baseURL: process.env.OPENAI_BASE_URL,
@@ -10,44 +12,63 @@ export async function generateReport(
   designChoices: DesignChoice[],
   metrics: MetricsResult,
 ): Promise<string> {
-  const prompt = `You are an expert in UX design and A/B testing for e-commerce websites. A computer science student has made the following design changes to a simulated shopping website as part of an educational exercise on A/B testing.
+  const defaultPrompt = `You are an expert in UX design and A/B testing for e-commerce websites. A computer science student has made the following design changes to a simulated shopping website as part of an educational exercise.
 
 ## Design Choices Made:
+{{DESIGN_CHOICES}}
 
-${designChoices
-  .map(
-    (choice, i) => `
+## Resulting Metrics (simulated):
+
+- **Conversion Rate:** {{CONVERSION_RATE}}% (baseline: 2.5%)
+- **Bounce Rate:** {{BOUNCE_RATE}}% (baseline: 45%) — lower is better
+- **Click-Through Rate:** {{CLICK_THROUGH_RATE}}% (baseline: 3.5%)
+- **Average Time on Page:** {{AVG_TIME_ON_PAGE}} seconds (baseline: 120s)
+- **Cart Abandonment Rate:** {{CART_ABANDONMENT_RATE}}% (baseline: 70%) — lower is better
+
+## Your Task
+
+Generate a clear, student-focused report analyzing these design choices. Your report should include:
+
+1. **Summary:** A brief overview of how effective the design changes were.
+
+2. **Analysis of Each Change:**
+   - Evaluate each choice using the provided metrics.
+   - Explain the UX principles that relate to the choice (e.g., Fitts’s Law, visual hierarchy).
+   - Comment on whether the student’s hypothesis was supported by the results.
+
+3. **Metric Breakdown:** Describe how each metric was influenced and why.
+
+4. **Recommendations:** Provide *only 2–3 concise suggestions* they might explore next.
+
+5. **A/B Testing Takeaways:** Give a short explanation of what the student can learn about A/B testing from this experiment.
+
+Keep the tone supportive and educational, and use markdown formatting for readability.
+`;
+
+  let promptTemplate = defaultPrompt;
+
+  const designChoicesText = designChoices
+    .map(
+      (choice, i) => `
 ### Change ${i + 1}:
 - **Element:** ${choice.object}
 - **Action:** ${choice.action}
 - **New Value:** ${choice.value}
 - **Student's Reasoning:** ${choice.reasoning || "No reasoning provided"}
 `,
-  )
-  .join("\n")}
+    )
+    .join("\n");
 
-## Resulting Metrics (simulated):
-
-- **Conversion Rate:** ${metrics.conversionRate}% (baseline: 2.5%)
-- **Bounce Rate:** ${metrics.bounceRate}% (baseline: 45%) - lower is better
-- **Click-Through Rate:** ${metrics.clickThroughRate}% (baseline: 3.5%)
-- **Average Time on Page:** ${metrics.avgTimeOnPage} seconds (baseline: 120s)
-- **Cart Abandonment Rate:** ${metrics.cartAbandonmentRate}% (baseline: 70%) - lower is better
-
-## Your Task:
-
-Generate an educational report analyzing the student's design choices. The report should:
-
-1. **Summary**: Provide a brief overview of the overall effectiveness of the changes
-2. **Analysis of Each Change**: For each design choice:
-   - Evaluate whether the choice was effective based on the metrics
-   - Explain the UX principles that make this choice good or bad
-   - Comment on the student's reasoning - was their hypothesis correct?
-3. **Metric Breakdown**: Explain how the changes affected each metric and why
-4. **Recommendations**: Suggest 2-3 improvements or alternative approaches they could test
-5. **A/B Testing Principles**: Include a brief section on what the student can learn about A/B testing from this exercise
-
-Keep the tone educational and encouraging. Use markdown formatting for readability. Be specific about UX principles and cite them where relevant (e.g., Fitts's Law, visual hierarchy, color psychology, etc.).`;
+  const prompt = promptTemplate
+    .replace("{{DESIGN_CHOICES}}", designChoicesText)
+    .replace("{{CONVERSION_RATE}}", metrics.conversionRate.toString())
+    .replace("{{BOUNCE_RATE}}", metrics.bounceRate.toString())
+    .replace("{{CLICK_THROUGH_RATE}}", metrics.clickThroughRate.toString())
+    .replace("{{AVG_TIME_ON_PAGE}}", metrics.avgTimeOnPage.toString())
+    .replace(
+      "{{CART_ABANDONMENT_RATE}}",
+      metrics.cartAbandonmentRate.toString(),
+    );
 
   try {
     const completion = await client.chat.completions.create({

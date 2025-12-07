@@ -253,6 +253,30 @@ export default function ResultsDisplay({
           </div>
         )}
       </div>
+
+      {/* Reflection Questions */}
+      <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          Reflection Questions
+        </h3>
+        <div className="space-y-3">
+          <p className="text-gray-700">
+            1. What were the key insights from your A/B test results?
+          </p>
+          <p className="text-gray-700">
+            2. Which design changes had the most significant impact on your metrics, and why do you think that was?
+          </p>
+          <p className="text-gray-700">
+            3. Did any results surprise you? How did they differ from your initial hypotheses?
+          </p>
+          <p className="text-gray-700">
+            4. Based on these results, what would you test differently in your next experiment?
+          </p>
+          <p className="text-gray-700">
+            5. How would you apply what you learned from this A/B test to improve the overall user experience?
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
