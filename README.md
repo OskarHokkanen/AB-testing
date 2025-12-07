@@ -20,12 +20,39 @@ A web-based AB-testing simulator for HCI courses where first-year computer scien
 
 ## Getting Started
 
-### Prerequisites
+### Option 1: Docker (Recommended)
+
+The easiest way to run this project is using Docker. See **[DOCKER.md](DOCKER.md)** for detailed instructions.
+
+#### Quick Start with Docker
+
+1. Clone the repository:
+```bash
+cd AB-testing
+```
+
+2. Create a `.env` file with your API key:
+```bash
+echo "OPENAI_API_KEY=your-api-key-here" > .env
+```
+
+3. Run the startup script:
+```bash
+./docker-start.sh
+```
+
+4. Access the application at [http://localhost:3000](http://localhost:3000)
+
+For more Docker options and troubleshooting, see **[DOCKER.md](DOCKER.md)**.
+
+### Option 2: Local Development
+
+#### Prerequisites
 - Node.js 18+
 - npm or yarn
 - An Anthropic API key (for AI report generation)
 
-### Installation
+#### Installation
 
 1. Clone the repository:
 ```bash
@@ -183,7 +210,16 @@ The metrics calculation engine in `src/lib/metrics.ts` contains weighted values 
 
 ## Deployment
 
-### Vercel (Recommended)
+### Docker (Recommended)
+
+The easiest way to deploy is using Docker. See **[DOCKER.md](DOCKER.md)** for complete deployment instructions.
+
+Quick deployment:
+```bash
+docker-compose up -d
+```
+
+### Vercel
 
 1. Push your code to GitHub
 2. Connect to Vercel
