@@ -172,7 +172,6 @@ AB-testing/
 |----------|-------------|----------|
 | `DATABASE_URL` | SQLite database path | Yes |
 | `OPENAI_API_KEY` | OpenAI API key | Yes |
-| `NEXT_PUBLIC_BASE_URL` | Base URL for the application | No |
 
 ### Metrics Calculation
 
