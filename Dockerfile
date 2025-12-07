@@ -3,6 +3,9 @@ FROM node:20-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
+# Build arguments for API keys
+ARG OPENAI_API_KEY
+ARG ANTHROPIC_API_KEY
 # Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
 RUN apk add --no-cache libc6-compat
 
@@ -21,6 +24,12 @@ COPY . .
 # Set environment variables for build
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
+
+# Pass API keys as build-time environment variables
+ARG OPENAI_API_KEY
+ARG ANTHROPIC_API_KEY
+ENV OPENAI_API_KEY=$OPENAI_API_KEY
+ENV ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
 
 # Generate Prisma Client
 RUN npx prisma generate
