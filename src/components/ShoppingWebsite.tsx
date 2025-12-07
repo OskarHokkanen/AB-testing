@@ -408,7 +408,7 @@ export default function ShoppingWebsite({
   const products = [
     {
       id: 1,
-      name: "Premium Wireless Headphones",
+      name: "Wireless Headphones",
       price: 149.99,
       originalPrice: 199.99,
       rating: 4.8,

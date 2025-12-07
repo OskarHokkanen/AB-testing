@@ -101,10 +101,7 @@ export default function LoginPage() {
 
         <div className="mt-8 pt-6 border-t border-gray-200">
           <p className="text-center text-sm text-gray-500">
-            HCI Course - AB Testing Exercise
-          </p>
-          <p className="text-center text-xs text-gray-400 mt-2">
-            Test IDs: student001, student002, student003
+            Basic HCI Course - AB Testing Exercise
           </p>
         </div>
       </div>
