@@ -1147,13 +1147,13 @@ export const CUSTOMIZATION_OPTIONS = {
       "Change Color": ["Green", "Orange", "Red", "Blue", "Purple"],
       "Change Size": ["Small", "Medium", "Large", "Extra Large"],
       "Change Text": ["Add to Cart", "Add to Bag", "Buy", "I Want This!"],
-      "Change Position": ["Below Price", "Next to Image", "Floating", "Bottom of Card"],
+      "Change Position": ["Below Price", "Floating", "Bottom of Card"],
     },
     "Product Title": {
       "Change Size": ["Small", "Medium", "Large", "Extra Large"],
       "Change Color": ["Black", "Dark Blue", "Brand Color", "Red"],
       "Change Font": ["Sans", "Serif", "Bold", "Light"],
-      "Change Position": ["Above Image", "Below Image", "Overlay on Image", "Centered"],
+      "Change Position": ["Above Image", "Below Image", "Overlay on Image"],
     },
     "Product Price": {
       "Change Size": ["Small", "Medium", "Large", "Extra Large"],
@@ -1165,7 +1165,7 @@ export const CUSTOMIZATION_OPTIONS = {
       "Change Size": ["Small", "Medium", "Large", "Full Screen"],
       "Change Style": ["Image Only", "Image with Text", "Video Background", "Carousel"],
       "Change CTA": ["Shop Now", "Explore Collection", "Limited Time Offer", "View Products"],
-      "Change Position": ["Top of Page", "After Navigation", "Mid Page", "Hidden"],
+      "Change Position": ["Top of Page", "Mid Page", "Hidden"],
     },
     Navigation: {
       "Change Style": ["Minimal", "Standard", "Mega Menu", "Hamburger"],
@@ -1181,7 +1181,7 @@ export const CUSTOMIZATION_OPTIONS = {
     },
     "Trust Badges": {
       "Change Visibility": ["Hidden", "Subtle", "Prominent", "Very Prominent"],
-      "Change Position": ["Near Checkout", "Footer", "Header", "Product Page"],
+      "Change Position": ["Footer", "Header"],
       "Change Type": ["Security Badges", "Payment Icons", "Guarantees", "Reviews"],
       "Change Style": ["Icons", "Icons with Text", "Text", "Colorful"],
     },

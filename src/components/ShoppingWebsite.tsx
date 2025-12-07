@@ -83,42 +83,88 @@ function getPositionForElement(
   );
   if (!choice) return "";
 
-  const positionMap: Record<string, string> = {
+  // Build position map based on element and value
+  const getPositionClass = (element: string, value: string): string => {
     // Checkout button positions
-    "Top Right": "checkout-top-right",
-    Center: "checkout-center",
-    "Bottom Right": "checkout-bottom-right",
-    Sticky: "checkout-sticky",
+    if (element === "Checkout Button") {
+      const checkoutMap: Record<string, string> = {
+        "Top Right": "checkout-top-right",
+        Center: "checkout-center",
+        "Bottom Right": "checkout-bottom-right",
+        Sticky: "checkout-sticky",
+      };
+      return checkoutMap[value] || "";
+    }
+
+    // Navigation positions
+    if (element === "Navigation") {
+      const navMap: Record<string, string> = {
+        Sticky: "sticky top-0 z-10",
+        Top: "",
+        "Left Side": "w-64 shrink-0",
+        Hidden: "hidden",
+      };
+      return navMap[value] || "";
+    }
+
     // Add to Cart positions
-    "Below Price": "cart-below-price",
-    "Next to Image": "cart-next-image",
-    Floating: "cart-floating",
-    "Bottom of Card": "cart-bottom-card",
-    // Other positions
-    "Above Image": "order-first",
-    "Below Image": "order-last",
-    "Overlay on Image":
-      "absolute bottom-2 left-2 bg-black/50 text-white px-2 py-1 rounded",
-    Centered: "text-center",
-    Top: "sticky top-0 z-10",
-    "Left Side": "w-64 shrink-0",
-    Hidden: "hidden",
-    "Near Checkout": "",
-    Footer: "mt-8",
-    Header: "mb-4",
-    "Product Page": "",
+    if (element === "Add to Cart Button") {
+      const cartMap: Record<string, string> = {
+        "Below Price": "cart-below-price",
+        "Next to Image": "cart-next-image",
+        Floating: "cart-floating",
+        "Bottom of Card": "cart-bottom-card",
+      };
+      return cartMap[value] || "";
+    }
+
+    // Product Title positions
+    if (element === "Product Title") {
+      const titleMap: Record<string, string> = {
+        "Above Image": "order-first",
+        "Below Image": "order-last",
+        "Overlay on Image": "absolute bottom-2 left-2 bg-black/50 text-white px-2 py-1 rounded",
+      };
+      return titleMap[value] || "";
+    }
+
     // Hero banner positions
-    "Top of Page": "hero-top",
-    "After Navigation": "hero-after-nav",
-    "Mid Page": "hero-mid",
-    // Price positions
-    "Next to Title": "price-next-title",
-    "Below Title": "price-below-title",
-    "Near Button": "price-near-button",
-    Prominent: "price-prominent",
+    if (element === "Hero Banner") {
+      const heroMap: Record<string, string> = {
+        "Top of Page": "hero-top",
+        "After Navigation": "hero-after-nav",
+        "Mid Page": "hero-mid",
+        Hidden: "hidden",
+      };
+      return heroMap[value] || "";
+    }
+
+    // Product Price positions
+    if (element === "Product Price") {
+      const priceMap: Record<string, string> = {
+        "Next to Title": "price-next-title",
+        "Below Title": "price-below-title",
+        "Near Button": "price-near-button",
+        Prominent: "price-prominent",
+      };
+      return priceMap[value] || "";
+    }
+
+    // Trust Badges positions
+    if (element === "Trust Badges") {
+      const badgeMap: Record<string, string> = {
+        "Near Checkout": "near-checkout",
+        Footer: "footer",
+        Header: "header",
+        "Product Page": "product-page",
+      };
+      return badgeMap[value] || "";
+    }
+
+    return "";
   };
 
-  return positionMap[choice.value] || "";
+  return getPositionClass(element, choice.value);
 }
 
 function getVisibilityForElement(
@@ -189,9 +235,9 @@ function getStyleForElement2(
   const styleMap: Record<string, string> = {
     // Navigation styles
     Minimal: "text-sm",
-    Standard: "nav-standard",
-    "Mega Menu": "text-base",
-    Hamburger: "",
+    Standard: "",
+    "Mega Menu": "nav-mega-menu",
+    Hamburger: "nav-hamburger",
     // Hero banner styles
     "Image Only": "hero-image-only",
     "Image with Text": "hero-image-text",
@@ -224,7 +270,7 @@ function getSearchStyleForElement(
     Prominent: "w-96",
     "Icon Only": "w-10",
     Hidden: "hidden",
-    Expandable: "w-10 focus-within:w-64 transition-all",
+    Expandable: "w-10 hover:w-64 transition-all",
   };
 
   return searchMap[choice.value] || "";
@@ -297,6 +343,7 @@ export default function ShoppingWebsite({
   const titleFontStyle =
     getStyleForElement("Product Title", "Change Font", designChoices) ||
     "font-semibold";
+  const titlePosition = getPositionForElement("Product Title", designChoices);
 
   const priceSizeStyle =
     getStyleForElement("Product Price", "Change Size", designChoices) ||
@@ -326,6 +373,7 @@ export default function ShoppingWebsite({
     getStyleForElement("Navigation", "Change Color", designChoices) ||
     "bg-white";
   const navPosition = getPositionForElement("Navigation", designChoices);
+  const navStyle = getStyleForElement2("Navigation", designChoices);
   const navSearchStyle =
     getSearchStyleForElement("Navigation", designChoices) || "w-64";
 
@@ -344,6 +392,18 @@ export default function ShoppingWebsite({
   );
   const trustPosition = getPositionForElement("Trust Badges", designChoices);
 
+  // Get Trust Badge Type
+  const trustTypeChoice = designChoices.find(
+    (c) => c.object === "Trust Badges" && c.action === "Change Type"
+  );
+  const trustType = trustTypeChoice?.value || "default";
+
+  // Get Trust Badge Style
+  const trustStyleChoice = designChoices.find(
+    (c) => c.object === "Trust Badges" && c.action === "Change Style"
+  );
+  const trustStyle = trustStyleChoice?.value || "Icons with Text";
+
   // Sample products
   const products = [
     {
@@ -353,7 +413,7 @@ export default function ShoppingWebsite({
       originalPrice: 199.99,
       rating: 4.8,
       reviews: 234,
-      image: "🎧",
+      image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop",
     },
     {
       id: 2,
@@ -362,7 +422,7 @@ export default function ShoppingWebsite({
       originalPrice: 349.99,
       rating: 4.6,
       reviews: 567,
-      image: "⌚",
+      image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop",
     },
     {
       id: 3,
@@ -371,7 +431,7 @@ export default function ShoppingWebsite({
       originalPrice: 99.99,
       rating: 4.7,
       reviews: 189,
-      image: "🔊",
+      image: "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400&h=400&fit=crop",
     },
     {
       id: 4,
@@ -380,7 +440,7 @@ export default function ShoppingWebsite({
       originalPrice: 79.99,
       rating: 4.5,
       reviews: 312,
-      image: "💻",
+      image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400&h=400&fit=crop",
     },
   ];
 
@@ -393,16 +453,84 @@ export default function ShoppingWebsite({
     }
   };
 
+  // Render Trust Badges based on type and style
+  const renderTrustBadges = (compact: boolean = false) => {
+    const badges = {
+      "Security Badges": [
+        { icon: Shield, title: "Secure Payment", desc: "256-bit SSL encryption" },
+        { icon: Shield, title: "Data Protection", desc: "Your privacy is safe" },
+        { icon: Shield, title: "Verified Secure", desc: "PCI DSS compliant" },
+      ],
+      "Payment Icons": [
+        { icon: Shield, title: "Visa & Mastercard", desc: "All major cards accepted" },
+        { icon: Shield, title: "PayPal", desc: "Fast & secure checkout" },
+        { icon: Shield, title: "Apple Pay", desc: "One-click payment" },
+      ],
+      "Guarantees": [
+        { icon: Shield, title: "Money Back", desc: "30-day guarantee" },
+        { icon: Truck, title: "Free Shipping", desc: "On orders over $50" },
+        { icon: RefreshCw, title: "Easy Returns", desc: "No questions asked" },
+      ],
+      "Reviews": [
+        { icon: Star, title: "Top Rated", desc: "4.8/5 customer rating" },
+        { icon: Star, title: "Verified Reviews", desc: "Real customer feedback" },
+        { icon: Star, title: "Trusted Shop", desc: "10,000+ happy customers" },
+      ],
+      "default": [
+        { icon: Shield, title: "Secure Payment", desc: "256-bit SSL encryption" },
+        { icon: Truck, title: "Free Shipping", desc: "On orders over $50" },
+        { icon: RefreshCw, title: "Easy Returns", desc: "30-day money back" },
+        { icon: Star, title: "Top Rated", desc: "4.8/5 customer rating" },
+      ],
+    };
+
+    const selectedBadges = badges[trustType as keyof typeof badges] || badges.default;
+    const showIcons = trustStyle !== "Text";
+    const showText = trustStyle !== "Icons";
+    const isColorful = trustStyle === "Colorful";
+
+    if (compact) {
+      return (
+        <div className="flex justify-center space-x-8 text-sm text-gray-600">
+          {selectedBadges.slice(0, 3).map((badge, idx) => (
+            <div key={idx} className="flex items-center space-x-2">
+              {showIcons && <badge.icon className={`w-4 h-4 ${isColorful ? "text-indigo-600" : ""}`} />}
+              {showText && <span>{badge.title}</span>}
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
+        {selectedBadges.map((badge, idx) => (
+          <div key={idx} className="flex flex-col items-center">
+            {showIcons && <badge.icon className={`w-8 h-8 mb-2 ${isColorful ? "text-indigo-600" : "text-gray-600"}`} />}
+            {trustStyle !== "Icons" && (
+              <>
+                <h4 className="font-semibold">{badge.title}</h4>
+                {trustStyle === "Icons with Text" && (
+                  <p className="text-sm text-gray-500">{badge.desc}</p>
+                )}
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div
-      className={`bg-gray-50 min-h-full ${isLeftNavigation ? "flex" : ""}`}
+      className={`bg-gray-50 min-h-full relative ${isLeftNavigation ? "flex" : ""}`}
       id="shopping-website"
     >
       {/* Navigation */}
       {navPosition !== "hidden" && (
         <nav
           onClick={(e) => handleElementClick("Navigation", e)}
-          className={`${navColorStyle} shadow-sm border-b border-gray-200 ${navPosition} ${isLeftNavigation ? "border-b-0 border-r" : ""} ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-indigo-400 hover:ring-inset transition-all" : ""}`}
+          className={`${navColorStyle} shadow-sm border-b border-gray-200 ${navPosition} ${navStyle} ${isLeftNavigation ? "border-b-0 border-r" : ""} ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-indigo-400 hover:ring-inset transition-all" : ""}`}
         >
           <div className={isLeftNavigation ? "p-4" : "max-w-7xl mx-auto px-4"}>
             <div
@@ -414,22 +542,32 @@ export default function ShoppingWebsite({
                 <span className="text-xl font-bold text-indigo-600">
                   TechStore
                 </span>
-                <div
-                  className={`${isLeftNavigation ? "flex flex-col space-y-2" : "hidden md:flex space-x-6"}`}
-                >
-                  <a href="#" className="text-gray-600 hover:text-gray-900">
-                    Products
-                  </a>
-                  <a href="#" className="text-gray-600 hover:text-gray-900">
-                    Categories
-                  </a>
-                  <a href="#" className="text-gray-600 hover:text-gray-900">
-                    Deals
-                  </a>
-                  <a href="#" className="text-gray-600 hover:text-gray-900">
-                    Support
-                  </a>
-                </div>
+                {navStyle === "nav-hamburger" ? (
+                  <button className="p-2">
+                    <div className="space-y-1">
+                      <div className="w-6 h-0.5 bg-gray-600"></div>
+                      <div className="w-6 h-0.5 bg-gray-600"></div>
+                      <div className="w-6 h-0.5 bg-gray-600"></div>
+                    </div>
+                  </button>
+                ) : (
+                  <div
+                    className={`${isLeftNavigation ? "flex flex-col space-y-2" : "hidden md:flex space-x-6"} ${navStyle === "nav-mega-menu" ? "text-base font-semibold space-x-8" : ""}`}
+                  >
+                    <a href="#" className={`text-gray-600 hover:text-gray-900 ${navStyle === "nav-mega-menu" ? "px-4 py-2 hover:bg-gray-100 rounded transition-colors" : ""}`}>
+                      Products
+                    </a>
+                    <a href="#" className={`text-gray-600 hover:text-gray-900 ${navStyle === "nav-mega-menu" ? "px-4 py-2 hover:bg-gray-100 rounded transition-colors" : ""}`}>
+                      Categories
+                    </a>
+                    <a href="#" className={`text-gray-600 hover:text-gray-900 ${navStyle === "nav-mega-menu" ? "px-4 py-2 hover:bg-gray-100 rounded transition-colors" : ""}`}>
+                      Deals
+                    </a>
+                    <a href="#" className={`text-gray-600 hover:text-gray-900 ${navStyle === "nav-mega-menu" ? "px-4 py-2 hover:bg-gray-100 rounded transition-colors" : ""}`}>
+                      Support
+                    </a>
+                  </div>
+                )}
               </div>
               {!isLeftNavigation && (
                 <div className="flex items-center space-x-4">
@@ -452,6 +590,15 @@ export default function ShoppingWebsite({
                       3
                     </span>
                   </button>
+                  {/* Checkout Button - In Navigation Bar */}
+                  {checkoutPosition === "checkout-top-right" && (
+                    <button
+                      onClick={(e) => handleElementClick("Checkout Button", e)}
+                      className={`text-white rounded-lg transition-colors ${checkoutColorStyle} ${checkoutSizeStyle} ${onElementClick ? "hover:ring-2 hover:ring-indigo-400 hover:ring-offset-2" : ""}`}
+                    >
+                      {checkoutText}
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -465,44 +612,73 @@ export default function ShoppingWebsite({
           <div
             onClick={(e) => handleElementClick("Hero Banner", e)}
             className={`${
-              heroBannerStyle === "hero-image-only" ? "bg-cover bg-center" :
+              heroBannerStyle === "hero-image-only" ? "bg-cover bg-center relative" :
               heroBannerStyle === "hero-video-bg" ? "bg-black relative" :
-              heroBannerStyle === "hero-carousel" ? "relative" :
-              "bg-gradient-to-r from-indigo-600 to-purple-600"
+              heroBannerStyle === "hero-carousel" ? "relative bg-cover bg-center" :
+              "bg-gradient-to-r from-indigo-600 to-purple-600 relative"
             } text-white ${
               heroBannerSize === "text-sm py-1 px-2" ? "py-8" :
               heroBannerSize === "text-base py-2 px-4" ? "py-16" :
               heroBannerSize === "text-lg py-3 px-6" ? "py-24" :
-              heroBannerSize === "text-xl py-4 px-8" ? "min-h-screen flex items-center" :
+              heroBannerSize === "min-h-screen" ? "min-h-screen flex items-center" :
               "py-16"
-            } ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-white hover:ring-inset transition-all" : ""}`}
-            style={heroBannerStyle === "hero-image-only" ? {backgroundImage: "url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 1200 600%22%3E%3Crect fill=%22%236366f1%22 width=%221200%22 height=%22600%22/%3E%3C/svg%3E')"} : {}}
+            } overflow-hidden ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-white hover:ring-inset transition-all" : ""}`}
+            style={
+              heroBannerStyle === "hero-image-only"
+                ? {backgroundImage: "url('https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1200&h=600&fit=crop')"}
+                : heroBannerStyle === "hero-carousel"
+                ? {backgroundImage: "url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=600&fit=crop')"}
+                : {}
+            }
           >
+            {/* Background image for default style */}
+            {(heroBannerStyle === "" || !heroBannerStyle) && (
+              <div className="absolute inset-0 opacity-20">
+                <img
+                  src="https://images.unsplash.com/photo-1607082349566-187342175e2f?w=1200&h=600&fit=crop"
+                  alt="Shopping bags"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
             <div className="max-w-7xl mx-auto px-4 relative z-10">
               {heroBannerStyle === "hero-video-bg" && (
-                <div className="absolute inset-0 opacity-50">
-                  <div className="w-full h-full bg-gradient-to-r from-purple-900 to-indigo-900 animate-pulse"></div>
-                </div>
+                <>
+                  <div className="absolute inset-0 opacity-30">
+                    <img
+                      src="https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=1200&h=600&fit=crop"
+                      alt="Shopping mall"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-900/50 to-indigo-900/50"></div>
+                </>
               )}
-              <div className="flex flex-col md:flex-row items-center justify-between relative">
+              <div className={`flex flex-col md:flex-row items-center justify-between relative ${heroBannerStyle === "hero-image-only" ? "min-h-[400px]" : ""}`}>
                 {(heroBannerStyle !== "hero-image-only") && (
-                  <div className="mb-8 md:mb-0">
-                    <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                  <div className="mb-8 md:mb-0 md:w-1/2">
+                    <h1 className="text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg">
                       Summer Sale
                     </h1>
-                    <p className="text-xl mb-6 text-indigo-100">
+                    <p className="text-xl mb-6 text-indigo-100 drop-shadow">
                       Up to 50% off on selected items
                     </p>
-                    <button className="bg-white text-indigo-600 px-8 py-3 rounded-lg font-semibold hover:bg-indigo-50 transition-colors">
+                    <button className="bg-white text-indigo-600 px-8 py-3 rounded-lg font-semibold hover:bg-indigo-50 transition-colors shadow-lg">
                       {heroCTA}
                     </button>
                   </div>
                 )}
                 {(heroBannerStyle === "hero-image-text" || heroBannerStyle === "" || !heroBannerStyle) && (
-                  <div className="text-8xl">🛍️</div>
+                  <div className="md:w-1/2 flex justify-center">
+                    <img
+                      src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=500&h=500&fit=crop"
+                      alt="Shopping"
+                      className="w-64 h-64 object-cover rounded-lg shadow-2xl"
+                    />
+                  </div>
                 )}
                 {heroBannerStyle === "hero-carousel" && (
-                  <div className="flex space-x-2 mt-4">
+                  <div className="flex space-x-2 mt-4 absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
                     <div className="w-2 h-2 bg-white rounded-full"></div>
                     <div className="w-2 h-2 bg-white/50 rounded-full"></div>
                     <div className="w-2 h-2 bg-white/50 rounded-full"></div>
@@ -514,27 +690,13 @@ export default function ShoppingWebsite({
         )}
 
         {/* Trust Badges - Header Position */}
-        {(trustPosition === "mb-4" ||
-          (trustPosition === "" && trustVisibility !== "hidden")) && (
+        {(trustPosition === "header" || (!trustPosition && trustVisibility !== "hidden")) && trustVisibility !== "hidden" && (
           <div
             onClick={(e) => handleElementClick("Trust Badges", e)}
-            className={`bg-gray-100 py-3 border-b ${trustVisibility} ${trustPosition} ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-indigo-400 hover:ring-inset transition-all" : ""}`}
+            className={`bg-gray-100 py-3 border-b ${trustVisibility} ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-indigo-400 hover:ring-inset transition-all" : ""}`}
           >
             <div className="max-w-7xl mx-auto px-4">
-              <div className="flex justify-center space-x-8 text-sm text-gray-600">
-                <div className="flex items-center space-x-2">
-                  <Truck className="w-4 h-4" />
-                  <span>Free Shipping</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Shield className="w-4 h-4" />
-                  <span>Secure Payment</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RefreshCw className="w-4 h-4" />
-                  <span>30-Day Returns</span>
-                </div>
-              </div>
+              {renderTrustBadges(true)}
             </div>
           </div>
         )}
@@ -546,44 +708,73 @@ export default function ShoppingWebsite({
             <div
               onClick={(e) => handleElementClick("Hero Banner", e)}
               className={`mb-8 ${
-                heroBannerStyle === "hero-image-only" ? "bg-cover bg-center" :
+                heroBannerStyle === "hero-image-only" ? "bg-cover bg-center relative" :
                 heroBannerStyle === "hero-video-bg" ? "bg-black relative" :
-                heroBannerStyle === "hero-carousel" ? "relative" :
-                "bg-gradient-to-r from-indigo-600 to-purple-600"
+                heroBannerStyle === "hero-carousel" ? "relative bg-cover bg-center" :
+                "bg-gradient-to-r from-indigo-600 to-purple-600 relative"
               } text-white ${
                 heroBannerSize === "text-sm py-1 px-2" ? "py-8" :
                 heroBannerSize === "text-base py-2 px-4" ? "py-16" :
                 heroBannerSize === "text-lg py-3 px-6" ? "py-24" :
-                heroBannerSize === "text-xl py-4 px-8" ? "py-32" :
+                heroBannerSize === "min-h-screen" ? "py-32" :
                 "py-16"
-              } rounded-lg ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-white hover:ring-inset transition-all" : ""}`}
-              style={heroBannerStyle === "hero-image-only" ? {backgroundImage: "url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 1200 600%22%3E%3Crect fill=%22%236366f1%22 width=%221200%22 height=%22600%22/%3E%3C/svg%3E')"} : {}}
+              } rounded-lg overflow-hidden ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-white hover:ring-inset transition-all" : ""}`}
+              style={
+                heroBannerStyle === "hero-image-only"
+                  ? {backgroundImage: "url('https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1200&h=600&fit=crop')"}
+                  : heroBannerStyle === "hero-carousel"
+                  ? {backgroundImage: "url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=600&fit=crop')"}
+                  : {}
+              }
             >
+              {/* Background image for default style */}
+              {(heroBannerStyle === "" || !heroBannerStyle) && (
+                <div className="absolute inset-0 opacity-20">
+                  <img
+                    src="https://images.unsplash.com/photo-1607082349566-187342175e2f?w=1200&h=600&fit=crop"
+                    alt="Shopping bags"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
               <div className="px-4 relative z-10">
                 {heroBannerStyle === "hero-video-bg" && (
-                  <div className="absolute inset-0 opacity-50 rounded-lg overflow-hidden">
-                    <div className="w-full h-full bg-gradient-to-r from-purple-900 to-indigo-900 animate-pulse"></div>
-                  </div>
+                  <>
+                    <div className="absolute inset-0 opacity-30 rounded-lg overflow-hidden">
+                      <img
+                        src="https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=1200&h=600&fit=crop"
+                        alt="Shopping mall"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-900/50 to-indigo-900/50 rounded-lg"></div>
+                  </>
                 )}
-                <div className="flex flex-col md:flex-row items-center justify-between relative">
+                <div className={`flex flex-col md:flex-row items-center justify-between relative ${heroBannerStyle === "hero-image-only" ? "min-h-[400px]" : ""}`}>
                   {(heroBannerStyle !== "hero-image-only") && (
-                    <div className="mb-8 md:mb-0">
-                      <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                    <div className="mb-8 md:mb-0 md:w-1/2">
+                      <h1 className="text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg">
                         Summer Sale
                       </h1>
-                      <p className="text-xl mb-6 text-indigo-100">
+                      <p className="text-xl mb-6 text-indigo-100 drop-shadow">
                         Up to 50% off on selected items
                       </p>
-                      <button className="bg-white text-indigo-600 px-8 py-3 rounded-lg font-semibold hover:bg-indigo-50 transition-colors">
+                      <button className="bg-white text-indigo-600 px-8 py-3 rounded-lg font-semibold hover:bg-indigo-50 transition-colors shadow-lg">
                         {heroCTA}
                       </button>
                     </div>
                   )}
                   {(heroBannerStyle === "hero-image-text" || heroBannerStyle === "" || !heroBannerStyle) && (
-                    <div className="text-8xl">🛍️</div>
+                    <div className="md:w-1/2 flex justify-center">
+                      <img
+                        src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=500&h=500&fit=crop"
+                        alt="Shopping"
+                        className="w-64 h-64 object-cover rounded-lg shadow-2xl"
+                      />
+                    </div>
                   )}
                   {heroBannerStyle === "hero-carousel" && (
-                    <div className="flex space-x-2 mt-4">
+                    <div className="flex space-x-2 mt-4 absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
                       <div className="w-2 h-2 bg-white rounded-full"></div>
                       <div className="w-2 h-2 bg-white/50 rounded-full"></div>
                       <div className="w-2 h-2 bg-white/50 rounded-full"></div>
@@ -602,26 +793,40 @@ export default function ShoppingWebsite({
             {products.map((product) => (
               <div
                 key={product.id}
-                className={`bg-white rounded-lg overflow-hidden hover:shadow-lg transition-shadow ${imageBorder} ${addToCartPosition === "cart-next-image" ? "flex" : ""} relative`}
+                className={`bg-white rounded-lg overflow-hidden hover:shadow-lg transition-shadow ${imageBorder} ${addToCartPosition === "cart-next-image" ? "flex" : addToCartPosition === "cart-bottom-card" ? "flex flex-col" : ""} relative`}
               >
+                {/* Product Title - Above Image */}
+                {titlePosition === "order-first" && (
+                  <div className="p-4 pb-0">
+                    <h3
+                      onClick={(e) => handleElementClick("Product Title", e)}
+                      className={`${titleSizeStyle} ${titleColorStyle} ${titleFontStyle} ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-indigo-400 hover:ring-inset transition-all rounded" : ""}`}
+                    >
+                      {product.name}
+                    </h3>
+                  </div>
+                )}
+
                 {/* Product Image with potential button next to it */}
-                <div className={`${addToCartPosition === "cart-next-image" ? "flex-shrink-0" : ""}`}>
+                <div className={`${addToCartPosition === "cart-next-image" ? "flex-shrink-0" : ""} ${titlePosition === "order-first" || titlePosition === "order-last" ? "" : "relative"}`}>
                   <div
                     onClick={(e) => handleElementClick("Product Image", e)}
-                    className={`relative bg-gray-100 p-8 text-center ${imageSize} ${
+                    className={`relative bg-gray-100 ${imageSize} ${
                       imageStyle === "image-zoom" ? "overflow-hidden group" :
                       imageStyle === "image-360" ? "overflow-hidden relative" :
                       imageStyle === "image-gallery" ? "relative" :
                       ""
                     } ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-indigo-400 hover:ring-inset transition-all" : ""}`}
                   >
-                    <span className={`text-6xl ${
-                      imageStyle === "image-zoom" ? "group-hover:scale-125 transition-transform duration-300" :
-                      imageStyle === "image-360" ? "inline-block hover:rotate-45 transition-transform duration-500" :
-                      ""
-                    }`}>
-                      {product.image}
-                    </span>
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className={`w-full h-48 object-cover ${
+                        imageStyle === "image-zoom" ? "group-hover:scale-125 transition-transform duration-300" :
+                        imageStyle === "image-360" ? "hover:rotate-45 transition-transform duration-500" :
+                        ""
+                      }`}
+                    />
                     {imageBadge && (
                       <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded z-10">
                         {imageBadge}
@@ -639,6 +844,15 @@ export default function ShoppingWebsite({
                         <div className="w-1.5 h-1.5 bg-gray-300 rounded-full"></div>
                       </div>
                     )}
+                    {/* Product Title - Overlay on Image */}
+                    {titlePosition === "absolute bottom-2 left-2 bg-black/50 text-white px-2 py-1 rounded" && (
+                      <h3
+                        onClick={(e) => handleElementClick("Product Title", e)}
+                        className={`absolute bottom-2 left-2 bg-black/50 text-white px-2 py-1 rounded ${titleSizeStyle} ${titleFontStyle} ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-indigo-400 hover:ring-inset transition-all" : ""}`}
+                      >
+                        {product.name}
+                      </h3>
+                    )}
                   </div>
                 </div>
 
@@ -655,15 +869,18 @@ export default function ShoppingWebsite({
                 )}
 
                 {/* Product Info */}
-                <div className={`p-4 ${addToCartPosition === "cart-bottom-card" ? "flex flex-col h-full" : ""}`}>
+                <div className={`p-4 ${addToCartPosition === "cart-bottom-card" ? "flex flex-col flex-1" : ""}`}>
                   {/* Title and Price Container */}
                   <div className={`${pricePosition === "price-next-title" ? "flex items-center justify-between mb-2" : ""}`}>
-                    <h3
-                      onClick={(e) => handleElementClick("Product Title", e)}
-                      className={`${titleSizeStyle} ${titleColorStyle} ${titleFontStyle} ${pricePosition === "price-next-title" ? "" : "mb-2"} ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-indigo-400 hover:ring-inset transition-all rounded" : ""}`}
-                    >
-                      {product.name}
-                    </h3>
+                    {/* Product Title - Default/Below Image Position */}
+                    {!titlePosition || titlePosition === "order-last" || titlePosition === "" ? (
+                      <h3
+                        onClick={(e) => handleElementClick("Product Title", e)}
+                        className={`${titleSizeStyle} ${titleColorStyle} ${titleFontStyle} ${pricePosition === "price-next-title" ? "" : "mb-2"} ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-indigo-400 hover:ring-inset transition-all rounded" : ""}`}
+                      >
+                        {product.name}
+                      </h3>
+                    ) : null}
 
                     {/* Price - Next to Title */}
                     {pricePosition === "price-next-title" && (
@@ -699,12 +916,12 @@ export default function ShoppingWebsite({
                       onClick={(e) => handleElementClick("Product Price", e)}
                       className={`${
                         pricePosition === "price-near-button" ? "mb-2" :
-                        pricePosition === "price-prominent" ? "mb-4 text-2xl font-bold" :
+                        pricePosition === "price-prominent" ? "mb-4" :
                         pricePosition === "price-below-title" ? "mb-4" :
                         "mb-4"
                       } ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-indigo-400 hover:ring-inset transition-all rounded inline-block" : ""}`}
                     >
-                      <span className={`${priceSizeStyle} ${priceColorStyle} font-bold`}>
+                      <span className={`${pricePosition === "price-prominent" ? "text-2xl font-bold" : priceSizeStyle} ${priceColorStyle} ${pricePosition !== "price-prominent" ? "font-bold" : ""}`}>
                         ${product.price.toFixed(2)}
                       </span>
                       {discountStyle.showOriginal && (
@@ -749,42 +966,31 @@ export default function ShoppingWebsite({
             ))}
           </div>
 
-          {/* Trust Badges - Product Page Position */}
-          {(trustPosition === "" || trustPosition === "mt-8") &&
-            trustVisibility !== "hidden" && (
-              <div
-                onClick={(e) => handleElementClick("Trust Badges", e)}
-                className={`mt-12 bg-white rounded-lg p-6 ${trustVisibility} ${trustPosition} ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-indigo-400 transition-all" : ""}`}
-              >
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
-                  <div className="flex flex-col items-center">
-                    <Shield className="w-8 h-8 text-indigo-600 mb-2" />
-                    <h4 className="font-semibold">Secure Payment</h4>
-                    <p className="text-sm text-gray-500">
-                      256-bit SSL encryption
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <Truck className="w-8 h-8 text-indigo-600 mb-2" />
-                    <h4 className="font-semibold">Free Shipping</h4>
-                    <p className="text-sm text-gray-500">On orders over $50</p>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <RefreshCw className="w-8 h-8 text-indigo-600 mb-2" />
-                    <h4 className="font-semibold">Easy Returns</h4>
-                    <p className="text-sm text-gray-500">30-day money back</p>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <Star className="w-8 h-8 text-indigo-600 mb-2" />
-                    <h4 className="font-semibold">Top Rated</h4>
-                    <p className="text-sm text-gray-500">
-                      4.8/5 customer rating
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
         </main>
+
+        {/* Trust Badges - Footer Position */}
+        {trustPosition === "footer" && trustVisibility !== "hidden" && (
+          <div
+            onClick={(e) => handleElementClick("Trust Badges", e)}
+            className={`bg-gray-100 py-6 border-t ${trustVisibility} ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-indigo-400 hover:ring-inset transition-all" : ""}`}
+          >
+            <div className="max-w-7xl mx-auto px-4">
+              {renderTrustBadges(false)}
+            </div>
+          </div>
+        )}
+
+        {/* Trust Badges - Near Checkout Position */}
+        {trustPosition === "near-checkout" && trustVisibility !== "hidden" && (
+          <div
+            onClick={(e) => handleElementClick("Trust Badges", e)}
+            className={`bg-gray-50 py-4 border-t ${trustVisibility} ${onElementClick ? "cursor-pointer hover:ring-2 hover:ring-indigo-400 hover:ring-inset transition-all" : ""}`}
+          >
+            <div className="max-w-7xl mx-auto px-4">
+              {renderTrustBadges(true)}
+            </div>
+          </div>
+        )}
 
         {/* Cart Summary / Checkout */}
         {checkoutPosition !== "checkout-top-right" &&
@@ -811,19 +1017,10 @@ export default function ShoppingWebsite({
         )}
 
         {/* Checkout Button - Special Positions */}
-        {checkoutPosition === "checkout-top-right" && (
-          <button
-            onClick={(e) => handleElementClick("Checkout Button", e)}
-            className={`fixed top-20 right-4 z-50 text-white rounded-lg transition-colors shadow-lg ${checkoutColorStyle} ${checkoutSizeStyle} ${onElementClick ? "hover:ring-2 hover:ring-indigo-400 hover:ring-offset-2" : ""}`}
-          >
-            {checkoutText}
-          </button>
-        )}
-
         {checkoutPosition === "checkout-bottom-right" && (
           <button
             onClick={(e) => handleElementClick("Checkout Button", e)}
-            className={`fixed bottom-4 right-4 z-50 text-white rounded-lg transition-colors shadow-lg ${checkoutColorStyle} ${checkoutSizeStyle} ${onElementClick ? "hover:ring-2 hover:ring-indigo-400 hover:ring-offset-2" : ""}`}
+            className={`absolute bottom-4 right-4 z-50 text-white rounded-lg transition-colors shadow-lg ${checkoutColorStyle} ${checkoutSizeStyle} ${onElementClick ? "hover:ring-2 hover:ring-indigo-400 hover:ring-offset-2" : ""}`}
           >
             {checkoutText}
           </button>
