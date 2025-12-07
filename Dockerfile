@@ -44,6 +44,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Copy node_modules for Prisma CLI access
+COPY --from=deps /app/node_modules ./node_modules
+
 # Install chromium for Puppeteer
 RUN apk add --no-cache \
     chromium \
@@ -64,6 +67,7 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/package-lock.json ./package-lock.json
 
 # Set the correct permission for prerender cache
 RUN mkdir .next
