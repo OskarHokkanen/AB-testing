@@ -34,9 +34,19 @@ export default function EditElementModal({
 
   if (!isOpen) return null;
 
-  const availableActions = CUSTOMIZATION_OPTIONS.actions[
+  // Get all actions for this element
+  const allActions = CUSTOMIZATION_OPTIONS.actions[
     elementName as keyof typeof CUSTOMIZATION_OPTIONS.actions
   ] || [];
+
+  // Filter out actions that have already been selected for this element
+  const usedActions = designChoices
+    .filter((c) => c.object === elementName)
+    .map((c) => c.action);
+
+  const availableActions = allActions.filter(
+    (act) => !usedActions.includes(act)
+  );
 
   const availableValues = action
     ? (CUSTOMIZATION_OPTIONS.values[
@@ -49,6 +59,16 @@ export default function EditElementModal({
 
     if (!action || !value || !reasoning.trim()) {
       alert("Please complete all fields before saving.");
+      return;
+    }
+
+    // Check if this action has already been used for this element
+    const isDuplicate = designChoices.some(
+      (c) => c.object === elementName && c.action === action
+    );
+
+    if (isDuplicate) {
+      alert(`You have already selected the action "${action}" for ${elementName}. Please choose a different action.`);
       return;
     }
 
@@ -91,10 +111,28 @@ export default function EditElementModal({
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6">
           <div className="space-y-4">
+            {/* Warning if all actions have been used */}
+            {availableActions.length === 0 && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <p className="text-sm text-amber-800">
+                  All available actions have been used for this element. You cannot add more changes.
+                </p>
+              </div>
+            )}
+
+            {/* Info message showing filtered actions */}
+            {usedActions.length > 0 && availableActions.length > 0 && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-800">
+                  Already used: <span className="font-medium">{usedActions.join(", ")}</span>
+                </p>
+              </div>
+            )}
+
             {/* Action Dropdown */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Action
+                Action {availableActions.length > 0 && <span className="text-gray-500 font-normal">({availableActions.length} available)</span>}
               </label>
               <select
                 value={action}
@@ -102,7 +140,8 @@ export default function EditElementModal({
                   setAction(e.target.value);
                   setValue(""); // Reset value when action changes
                 }}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                disabled={availableActions.length === 0}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
               >
                 <option value="">Select action...</option>
                 {availableActions.map((act) => (

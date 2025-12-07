@@ -39,17 +39,36 @@ export default function CustomizationPanel({
       newChoices[index].value = "";
     } else if (field === "action") {
       newChoices[index].value = "";
+
+      // Check if this action is already used for this object
+      const isDuplicate = designChoices.some(
+        (c, idx) => idx !== index && c.object === newChoices[index].object && c.action === value
+      );
+
+      if (isDuplicate) {
+        alert(`You have already selected the action "${value}" for ${newChoices[index].object}. Please choose a different action.`);
+        newChoices[index].action = "";
+        newChoices[index].value = "";
+        onDesignChoicesChange(newChoices);
+        return;
+      }
     }
 
     onDesignChoicesChange(newChoices);
   };
 
-  const getActionsForObject = (object: string): string[] => {
-    return (
-      CUSTOMIZATION_OPTIONS.actions[
-        object as keyof typeof CUSTOMIZATION_OPTIONS.actions
-      ] || []
-    );
+  const getActionsForObject = (object: string, currentIndex: number): string[] => {
+    const allActions = CUSTOMIZATION_OPTIONS.actions[
+      object as keyof typeof CUSTOMIZATION_OPTIONS.actions
+    ] || [];
+
+    // Get actions that have already been used for this object (excluding the current choice)
+    const usedActions = designChoices
+      .filter((c, idx) => c.object === object && idx !== currentIndex)
+      .map((c) => c.action);
+
+    // Filter out already-used actions
+    return allActions.filter((action) => !usedActions.includes(action));
   };
 
   const getValuesForAction = (object: string, action: string): string[] => {
@@ -140,6 +159,11 @@ export default function CustomizationPanel({
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-1">
                     Action
+                    {choice.object && (
+                      <span className="text-xs text-gray-500 ml-1">
+                        ({getActionsForObject(choice.object, index).length} available)
+                      </span>
+                    )}
                   </label>
                   <select
                     value={choice.action}
@@ -154,7 +178,7 @@ export default function CustomizationPanel({
                     }`}
                   >
                     <option value="">Select action...</option>
-                    {getActionsForObject(choice.object).map((action) => (
+                    {getActionsForObject(choice.object, index).map((action) => (
                       <option key={action} value={action}>
                         {action}
                       </option>
