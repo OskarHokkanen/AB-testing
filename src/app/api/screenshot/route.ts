@@ -36,12 +36,22 @@ export async function POST(request: Request) {
 
     // Ensure screenshots directory exists
     const screenshotsDir = path.join(process.cwd(), "public", "screenshots");
-    await mkdir(screenshotsDir, { recursive: true });
+    try {
+      await mkdir(screenshotsDir, { recursive: true });
+    } catch (mkdirError) {
+      console.error("Error creating screenshots directory:", mkdirError);
+      // Continue anyway - directory might already exist
+    }
 
     // Save screenshot
     const filename = `${submissionId}-${Date.now()}.png`;
     const filepath = path.join(screenshotsDir, filename);
-    await writeFile(filepath, screenshot);
+    try {
+      await writeFile(filepath, screenshot);
+    } catch (writeError) {
+      console.error("Error writing screenshot file:", writeError);
+      throw new Error(`Failed to save screenshot: ${writeError instanceof Error ? writeError.message : String(writeError)}`);
+    }
 
     // Update submission with screenshot path
     await prisma.submission.update({

@@ -44,6 +44,13 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Runtime environment variables must be set at container runtime, not build time
+# These are placeholders that will be overridden by the actual runtime values
+ARG OPENAI_API_KEY
+ARG ANTHROPIC_API_KEY
+ENV OPENAI_API_KEY=$OPENAI_API_KEY
+ENV ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
+
 # Copy node_modules for Prisma CLI access
 COPY --from=deps /app/node_modules ./node_modules
 
@@ -77,9 +84,8 @@ RUN chown nextjs:nodejs .next
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Create screenshots directory with proper permissions
-RUN mkdir -p ./public/screenshots
-RUN chown -R nextjs:nodejs ./public
+# Create screenshots directory with proper permissions BEFORE changing user
+RUN mkdir -p ./public/screenshots && chown -R nextjs:nodejs ./public
 
 # Create data directory for SQLite database
 RUN mkdir -p ./prisma

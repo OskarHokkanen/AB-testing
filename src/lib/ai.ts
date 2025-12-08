@@ -3,6 +3,11 @@ import { DesignChoice, MetricsResult } from "./metrics";
 import fs from "fs";
 import path from "path";
 
+// Validate API key at startup
+if (!process.env.OPENAI_API_KEY) {
+  console.error("OPENAI_API_KEY environment variable is not set");
+}
+
 const client = new OpenAI({
   baseURL: process.env.OPENAI_BASE_URL,
   apiKey: process.env.OPENAI_API_KEY,
