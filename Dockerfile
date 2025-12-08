@@ -54,14 +54,15 @@ ENV ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
 # Copy node_modules for Prisma CLI access
 COPY --from=deps /app/node_modules ./node_modules
 
-# Install chromium for Puppeteer
+# Install chromium for Puppeteer and su-exec for user switching
 RUN apk add --no-cache \
     chromium \
     nss \
     freetype \
     harfbuzz \
     ca-certificates \
-    ttf-freefont
+    ttf-freefont \
+    su-exec
 
 # Tell Puppeteer to use the installed chromium package
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
@@ -91,11 +92,15 @@ RUN mkdir -p ./public/screenshots && chown -R nextjs:nodejs ./public
 RUN mkdir -p ./prisma
 RUN chown -R nextjs:nodejs ./prisma
 
-USER nextjs
+# Copy entrypoint script
+COPY --chown=root:root entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 EXPOSE 3000
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["node", "server.js"]
+# Use entrypoint to fix permissions at runtime, then switch to nextjs user
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["su-exec", "nextjs", "node", "server.js"]
