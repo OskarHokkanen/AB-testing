@@ -53,15 +53,15 @@ export async function POST(request: Request) {
       throw new Error(`Failed to save screenshot: ${writeError instanceof Error ? writeError.message : String(writeError)}`);
     }
 
-    // Update submission with screenshot path
+    // Update submission with screenshot path (use API route for serving)
     await prisma.submission.update({
       where: { id: submissionId },
-      data: { screenshotPath: `/screenshots/${filename}` },
+      data: { screenshotPath: `/api/screenshots/${filename}` },
     });
 
     return NextResponse.json({
       success: true,
-      screenshotPath: `/screenshots/${filename}`,
+      screenshotPath: `/api/screenshots/${filename}`,
     });
   } catch (error) {
     console.error("Screenshot error:", error);
