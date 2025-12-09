@@ -7,7 +7,10 @@ import path from "path";
 if (!process.env.OPENAI_API_KEY) {
   console.error("OPENAI_API_KEY environment variable is not set");
 } else {
-  console.log("OPENAI_API_KEY is set:", process.env.OPENAI_API_KEY.substring(0, 8) + "...");
+  console.log(
+    "OPENAI_API_KEY is set:",
+    process.env.OPENAI_API_KEY.substring(0, 8) + "...",
+  );
 }
 
 if (!process.env.OPENAI_BASE_URL) {
@@ -91,7 +94,7 @@ Keep the tone supportive and educational, and use markdown formatting for readab
           content: prompt,
         },
       ],
-      max_tokens: 2000,
+      max_completion_tokens: 2000,
     });
 
     return (
