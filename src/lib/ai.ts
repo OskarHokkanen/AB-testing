@@ -17,7 +17,6 @@ if (!process.env.OPENAI_BASE_URL) {
 }
 
 const client = new OpenAI({
-  baseURL: process.env.OPENAI_BASE_URL,
   apiKey: process.env.OPENAI_API_KEY,
 });
 
@@ -85,7 +84,7 @@ Keep the tone supportive and educational, and use markdown formatting for readab
 
   try {
     const completion = await client.chat.completions.create({
-      model: "gpt-5-chat",
+      model: "gpt-5-mini",
       messages: [
         {
           role: "user",
