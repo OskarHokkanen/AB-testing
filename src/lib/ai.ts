@@ -44,20 +44,18 @@ export async function generateReport(
 
 Generate a clear, student-focused report analyzing these design choices. Your report should include:
 
-1. **Summary:** A brief overview of how effective the design changes were.
+1. **Summary:** A brief overview of how effective the design changes were overall.
 
 2. **Analysis of Each Change:**
    - Evaluate each choice using the provided metrics.
-   - Explain the UX principles that relate to the choice (e.g., Fitts’s Law, visual hierarchy).
-   - Comment on whether the student’s hypothesis was supported by the results.
+   - Explain the UX principles that relate to the choice (e.g., Fitts's Law, visual hierarchy, cognitive load).
+   - Comment on whether the student's hypothesis was supported by the results.
 
-3. **Metric Breakdown:** Describe how each metric was influenced and why.
+3. **Metric Breakdown:** Describe how each metric was influenced and why, connecting specific design choices to their impact.
 
-4. **Recommendations:** Provide *only 2–3 concise suggestions* they might explore next.
+4. **Key Learnings:** Explain what this experiment demonstrates about A/B testing principles, user behavior, and design decisions in e-commerce contexts.
 
-5. **A/B Testing Takeaways:** Give a short explanation of what the student can learn about A/B testing from this experiment.
-
-Keep the tone supportive and educational, and use markdown formatting for readability.
+Keep the tone supportive and educational. Use markdown formatting for readability. Focus entirely on analyzing what was done in this experiment. Do not suggest follow-up experiments, offer to help with future tasks, or mention additional services.
 `;
 
   let promptTemplate = defaultPrompt;
@@ -86,20 +84,13 @@ Keep the tone supportive and educational, and use markdown formatting for readab
     );
 
   try {
-    const completion = await client.chat.completions.create({
+    const response = await client.responses.create({
       model: "gpt-5-mini",
-      messages: [
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      max_completion_tokens: 2000,
+      input: prompt,
     });
 
     return (
-      completion.choices[0].message.content ||
-      "Unable to generate report. Please try again."
+      response.output_text || "Unable to generate report. Please try again."
     );
   } catch (error) {
     console.error("Error generating AI report:", error);
