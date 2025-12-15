@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
@@ -10,6 +10,7 @@ import {
   MousePointer,
   ShoppingCart,
   Users,
+  RefreshCw,
 } from "lucide-react";
 
 interface MetricsResult {
@@ -24,6 +25,8 @@ interface ResultsDisplayProps {
   metrics: MetricsResult;
   aiReport: string | null;
   screenshotPath?: string | null;
+  submissionId?: string;
+  onReportRetry?: (newReport: string) => void;
 }
 
 // Baseline metrics for comparison
@@ -97,7 +100,44 @@ export default function ResultsDisplay({
   metrics,
   aiReport,
   screenshotPath,
+  submissionId,
+  onReportRetry,
 }: ResultsDisplayProps) {
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [retryError, setRetryError] = useState<string | null>(null);
+  const [currentReport, setCurrentReport] = useState(aiReport);
+
+  const handleRetry = async () => {
+    if (!submissionId) return;
+
+    setIsRetrying(true);
+    setRetryError(null);
+
+    try {
+      const response = await fetch("/api/submissions/retry-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ submissionId }),
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.submission.aiReport) {
+        setCurrentReport(data.submission.aiReport);
+        if (onReportRetry) {
+          onReportRetry(data.submission.aiReport);
+        }
+      } else {
+        setRetryError(data.error || "Failed to generate report");
+      }
+    } catch (error) {
+      console.error("Retry error:", error);
+      setRetryError("Connection error. Please try again.");
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Metrics Grid */}
@@ -167,7 +207,7 @@ export default function ResultsDisplay({
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
           AI Analysis Report
         </h3>
-        {aiReport ? (
+        {currentReport ? (
           <div className="prose prose-indigo max-w-none">
             <style jsx>{`
               :global(.prose li > p) {
@@ -239,17 +279,36 @@ export default function ResultsDisplay({
                 ),
               }}
             >
-              {aiReport}
+              {currentReport}
             </ReactMarkdown>
           </div>
         ) : (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <p className="text-sm text-yellow-800">
-              <strong>AI report unavailable.</strong> The AI analysis service is
-              temporarily unavailable, but your submission was saved
-              successfully. You can still view your metrics and design choices
-              above.
-            </p>
+          <div className="space-y-3">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <p className="text-sm text-yellow-800">
+                <strong>AI report unavailable.</strong> The AI analysis service
+                failed to generate a report, but your submission was saved
+                successfully. You can still view your metrics and design choices
+                above.
+              </p>
+            </div>
+            {submissionId && (
+              <div>
+                <button
+                  onClick={handleRetry}
+                  disabled={isRetrying}
+                  className="flex items-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 ${isRetrying ? "animate-spin" : ""}`}
+                  />
+                  <span>{isRetrying ? "Generating..." : "Retry Report"}</span>
+                </button>
+                {retryError && (
+                  <p className="text-sm text-red-600 mt-2">{retryError}</p>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>

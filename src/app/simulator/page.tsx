@@ -525,6 +525,21 @@ export default function SimulatorPage() {
               metrics={selectedSubmission.metrics}
               aiReport={selectedSubmission.aiReport}
               screenshotPath={selectedSubmission.screenshotPath}
+              submissionId={selectedSubmission.id}
+              onReportRetry={(newReport) => {
+                setSelectedSubmission({
+                  ...selectedSubmission,
+                  aiReport: newReport,
+                });
+                // Also update in submissions list
+                setSubmissions(
+                  submissions.map((s) =>
+                    s.id === selectedSubmission.id
+                      ? { ...s, aiReport: newReport }
+                      : s,
+                  ),
+                );
+              }}
             />
           </div>
         ) : (
@@ -653,6 +668,29 @@ export default function SimulatorPage() {
         designChoices={designChoices}
         onSaveChange={handleSaveChange}
       />
+
+      {/* Full-Screen Loading Overlay */}
+      {isSubmitting && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/75 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 text-center">
+            <div className="mb-6">
+              <Loader2 className="w-16 h-16 animate-spin text-indigo-600 mx-auto" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-3">
+              Processing Your Experiment
+            </h3>
+            <p className="text-gray-600 mb-4">
+              We're analyzing your design choices and generating detailed
+              results. This may take 30-60 seconds.
+            </p>
+            <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-100">
+              <p className="text-sm text-indigo-800 font-medium">
+                Please don't close this window or navigate away
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

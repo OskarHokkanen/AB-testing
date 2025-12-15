@@ -89,9 +89,13 @@ Keep the tone supportive and educational. Use markdown formatting for readabilit
       input: prompt,
     });
 
-    return (
-      response.output_text || "Unable to generate report. Please try again."
-    );
+    // Validate that we got actual content back
+    if (!response.output_text || response.output_text.trim().length === 0) {
+      console.error("AI report generation returned empty response");
+      throw new Error("AI service returned empty response");
+    }
+
+    return response.output_text;
   } catch (error) {
     console.error("Error generating AI report:", error);
     throw new Error("Failed to generate AI report");
