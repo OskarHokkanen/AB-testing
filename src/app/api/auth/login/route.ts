@@ -38,7 +38,7 @@ export async function POST(request: Request) {
         studentId: student.studentId,
         name: student.name,
         submissionCount: submissionCount,
-        remainingAttempts: 3 - submissionCount,
+        remainingAttempts: 6 - submissionCount,
         submissions: student.submissions.map((submission) => ({
           id: submission.id,
           designChoices: submission.designChoices,

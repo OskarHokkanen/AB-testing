@@ -74,7 +74,7 @@ export default function ConfirmationDialog({
                 <p className="text-sm text-blue-700 mt-1">
                   You have{" "}
                   <span className="font-bold">{remainingAttempts}</span> out of
-                  3 submission attempts left.
+                  6 submission attempts left.
                   {remainingAttempts === 1 && (
                     <span className="block mt-1 font-semibold">
                       This is your last attempt!

@@ -57,7 +57,7 @@ export default function SimulatorPage() {
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [remainingAttempts, setRemainingAttempts] = useState(3);
+  const [remainingAttempts, setRemainingAttempts] = useState(6);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedElement, setSelectedElement] = useState<string>("");
   const websiteRef = useRef<HTMLDivElement>(null);
@@ -94,7 +94,7 @@ export default function SimulatorPage() {
         // Student is valid, set state
         setStudentId(storedStudentId);
         setStudentName(data.student.name);
-        setRemainingAttempts(data.student.remainingAttempts || 3);
+        setRemainingAttempts(data.student.remainingAttempts || 6);
 
         if (data.student.submissions) {
           setSubmissions(
@@ -250,7 +250,7 @@ export default function SimulatorPage() {
 
     // Check if student has remaining attempts
     if (remainingAttempts <= 0) {
-      alert("You have used all 3 submission attempts.");
+      alert("You have used all 6 submission attempts.");
       return;
     }
 

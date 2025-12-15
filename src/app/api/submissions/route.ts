@@ -23,13 +23,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Student not found" }, { status: 404 });
     }
 
-    // Check if student has reached submission limit (max 3)
+    // Check if student has reached submission limit (max 6)
     const submissionCount = (student as any).submissionCount || 0;
-    if (submissionCount >= 3) {
+    if (submissionCount >= 6) {
       return NextResponse.json(
         {
           error:
-            "Maximum submission limit reached. You have used all 3 attempts.",
+            "Maximum submission limit reached. You have used all 6 attempts.",
         },
         { status: 403 },
       );
@@ -84,7 +84,7 @@ export async function POST(request: Request) {
         screenshotPath: submission.screenshotPath,
         createdAt: submission.createdAt,
       },
-      remainingAttempts: 3 - (submissionCount + 1),
+      remainingAttempts: 6 - (submissionCount + 1),
     });
   } catch (error) {
     console.error("Submission error:", error);
