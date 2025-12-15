@@ -85,7 +85,7 @@ Keep the tone supportive and educational. Use markdown formatting for readabilit
 
   try {
     const response = await client.responses.create({
-      model: "gpt-5-mini",
+      model: "gpt-5.1",
       input: prompt,
     });
 
