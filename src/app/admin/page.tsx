@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { apiFetch } from "@/lib/api";
 import {
   Shield,
   Users,
@@ -75,7 +76,7 @@ export default function AdminPage() {
 
   const loadStudents = async () => {
     try {
-      const response = await fetch("/api/admin/students");
+      const response = await apiFetch("/api/admin/students");
       const data = await response.json();
       if (data.success) {
         setStudents(data.students);
@@ -90,7 +91,7 @@ export default function AdminPage() {
     setLoginError("");
 
     try {
-      const response = await fetch("/api/admin/login", {
+      const response = await apiFetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -123,7 +124,7 @@ export default function AdminPage() {
     setIsAddingStudent(true);
 
     try {
-      const response = await fetch("/api/admin/students", {
+      const response = await apiFetch("/api/admin/students", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -158,7 +159,7 @@ export default function AdminPage() {
     }
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `/api/admin/students?studentId=${studentId}`,
         {
           method: "DELETE",
@@ -186,7 +187,7 @@ export default function AdminPage() {
     setIsGeneratingBulk(true);
 
     try {
-      const response = await fetch("/api/admin/students/bulk", {
+      const response = await apiFetch("/api/admin/students/bulk", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

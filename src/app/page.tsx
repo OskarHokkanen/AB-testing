@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FlaskConical, LogIn } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -22,7 +23,7 @@ export default function LoginPage() {
     }
 
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await apiFetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ studentId: studentId.trim() }),

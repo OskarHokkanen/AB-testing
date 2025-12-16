@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { apiFetch, apiUrl } from "@/lib/api";
 import {
   FlaskConical,
   LogOut,
@@ -75,7 +76,7 @@ export default function SimulatorPage() {
     // Verify the student ID is still valid in the database
     const verifyStudent = async () => {
       try {
-        const response = await fetch("/api/auth/login", {
+        const response = await apiFetch("/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ studentId: storedStudentId }),
@@ -130,7 +131,7 @@ export default function SimulatorPage() {
     const loadDraft = async () => {
       try {
         console.log("[Draft] Loading draft for student:", studentId);
-        const response = await fetch(`/api/drafts?studentId=${studentId}`);
+        const response = await apiFetch(`/api/drafts?studentId=${studentId}`);
         const data = await response.json();
 
         if (data.success && data.draftDesignChoices.length > 0) {
@@ -161,7 +162,7 @@ export default function SimulatorPage() {
     );
     setIsSavingDraft(true);
     try {
-      const response = await fetch("/api/drafts", {
+      const response = await apiFetch("/api/drafts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ studentId, designChoices }),
@@ -217,7 +218,7 @@ export default function SimulatorPage() {
 
     try {
       console.log("[Draft] Clearing draft for student:", studentId);
-      const response = await fetch(`/api/drafts?studentId=${studentId}`, {
+      const response = await apiFetch(`/api/drafts?studentId=${studentId}`, {
         method: "DELETE",
       });
       const data = await response.json();
@@ -264,7 +265,7 @@ export default function SimulatorPage() {
 
     try {
       // Submit design choices
-      const response = await fetch("/api/submissions", {
+      const response = await apiFetch("/api/submissions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ studentId, designChoices }),
@@ -293,7 +294,7 @@ export default function SimulatorPage() {
               </html>
             `;
 
-            await fetch("/api/screenshot", {
+            await apiFetch("/api/screenshot", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -303,7 +304,7 @@ export default function SimulatorPage() {
             });
 
             // Refetch all submissions to get the updated one with screenshot
-            const updatedResponse = await fetch(
+            const updatedResponse = await apiFetch(
               `/api/submissions?studentId=${studentId}`,
             );
             const updatedData = await updatedResponse.json();

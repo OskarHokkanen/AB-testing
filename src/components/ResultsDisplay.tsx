@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { apiFetch } from "@/lib/api";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
@@ -114,7 +115,7 @@ export default function ResultsDisplay({
     setRetryError(null);
 
     try {
-      const response = await fetch("/api/submissions/retry-report", {
+      const response = await apiFetch("/api/submissions/retry-report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ submissionId }),
