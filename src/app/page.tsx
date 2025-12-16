@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { FlaskConical, LogIn } from "lucide-react";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [studentId, setStudentId] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -32,7 +34,7 @@ export default function LoginPage() {
         // Store student ID in sessionStorage and redirect
         sessionStorage.setItem("studentId", studentId.trim());
         sessionStorage.setItem("studentData", JSON.stringify(data.student));
-        window.location.href = "/simulator";
+        router.push("/simulator");
       } else {
         setError(data.error || "Login failed");
       }
