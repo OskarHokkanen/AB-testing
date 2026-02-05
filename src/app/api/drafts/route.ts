@@ -7,8 +7,6 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const studentId = searchParams.get("studentId");
 
-    console.log("[API Draft GET] Request for studentId:", studentId);
-
     if (!studentId) {
       return NextResponse.json(
         { success: false, error: "Student ID is required" },
@@ -21,7 +19,6 @@ export async function GET(request: NextRequest) {
     });
 
     if (!student) {
-      console.log("[API Draft GET] Student not found:", studentId);
       return NextResponse.json(
         { success: false, error: "Student not found" },
         { status: 404 },
@@ -31,13 +28,6 @@ export async function GET(request: NextRequest) {
     const draftDesignChoices = (student as any).draftDesignChoices
       ? JSON.parse((student as any).draftDesignChoices)
       : [];
-
-    console.log(
-      "[API Draft GET] Returning",
-      draftDesignChoices.length,
-      "design choices for student:",
-      studentId,
-    );
 
     return NextResponse.json({
       success: true,
@@ -58,14 +48,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { studentId, designChoices } = body;
 
-    console.log(
-      "[API Draft POST] Saving draft for studentId:",
-      studentId,
-      "with",
-      designChoices?.length || 0,
-      "design choices",
-    );
-
     if (!studentId) {
       return NextResponse.json(
         { success: false, error: "Student ID is required" },
@@ -74,7 +56,6 @@ export async function POST(request: NextRequest) {
     }
 
     if (!Array.isArray(designChoices)) {
-      console.log("[API Draft POST] Invalid design choices format");
       return NextResponse.json(
         { success: false, error: "Design choices must be an array" },
         { status: 400 },
@@ -88,8 +69,6 @@ export async function POST(request: NextRequest) {
         draftDesignChoices: JSON.stringify(designChoices),
       } as any,
     });
-
-    console.log("[API Draft POST] Successfully saved draft for:", studentId);
 
     return NextResponse.json({
       success: true,
@@ -110,8 +89,6 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const studentId = searchParams.get("studentId");
 
-    console.log("[API Draft DELETE] Clearing draft for studentId:", studentId);
-
     if (!studentId) {
       return NextResponse.json(
         { success: false, error: "Student ID is required" },
@@ -125,11 +102,6 @@ export async function DELETE(request: NextRequest) {
         draftDesignChoices: null,
       } as any,
     });
-
-    console.log(
-      "[API Draft DELETE] Successfully cleared draft for:",
-      studentId,
-    );
 
     return NextResponse.json({
       success: true,

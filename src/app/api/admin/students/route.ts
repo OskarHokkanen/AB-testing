@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 
 export async function GET() {
   try {
+    console.log("[ADMIN] Fetching all students");
     const students = await prisma.student.findMany({
       include: {
         submissions: {
@@ -11,6 +12,8 @@ export async function GET() {
       },
       orderBy: { createdAt: "desc" },
     });
+
+    console.log(`[ADMIN] Successfully fetched ${students.length} students`);
 
     return NextResponse.json({
       success: true,
@@ -37,7 +40,7 @@ export async function GET() {
       })),
     });
   } catch (error) {
-    console.error("Get students error:", error);
+    console.error("[ADMIN] Get students error:", error);
     return NextResponse.json(
       { error: "Failed to get students" },
       { status: 500 }
@@ -48,6 +51,8 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const { studentId, name } = await request.json();
+
+    console.log(`[ADMIN] Creating student: ${studentId} (${name || 'No name'})`);
 
     if (!studentId) {
       return NextResponse.json(
@@ -62,6 +67,7 @@ export async function POST(request: Request) {
     });
 
     if (existing) {
+      console.log(`[ADMIN] Failed to create student - Student ID already exists: ${studentId}`);
       return NextResponse.json(
         { error: "Student ID already exists" },
         { status: 400 }
@@ -75,6 +81,8 @@ export async function POST(request: Request) {
       },
     });
 
+    console.log(`[ADMIN] Successfully created student: ${studentId} (${name || 'No name'})`);
+
     return NextResponse.json({
       success: true,
       student: {
@@ -87,7 +95,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    console.error("Create student error:", error);
+    console.error("[ADMIN] Create student error:", error);
     return NextResponse.json(
       { error: "Failed to create student" },
       { status: 500 }
@@ -99,6 +107,8 @@ export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const studentId = searchParams.get("studentId");
+
+    console.log(`[ADMIN] Deleting student: ${studentId}`);
 
     if (!studentId) {
       return NextResponse.json(
@@ -112,13 +122,20 @@ export async function DELETE(request: Request) {
       where: { studentId },
     });
 
+    const student = await prisma.student.findUnique({
+      where: { studentId },
+      select: { name: true },
+    });
+
     await prisma.student.delete({
       where: { studentId },
     });
 
+    console.log(`[ADMIN] Successfully deleted student: ${studentId} (${student?.name || 'No name'})`);
+
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Delete student error:", error);
+    console.error("[ADMIN] Delete student error:", error);
     return NextResponse.json(
       { error: "Failed to delete student" },
       { status: 500 }

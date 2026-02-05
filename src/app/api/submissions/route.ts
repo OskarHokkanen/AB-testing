@@ -20,12 +20,14 @@ export async function POST(request: Request) {
     });
 
     if (!student) {
+      console.log(`[SUBMISSION] Failed submission attempt - Student not found: ${studentId}`);
       return NextResponse.json({ error: "Student not found" }, { status: 404 });
     }
 
     // Check if student has reached submission limit (max 6)
     const submissionCount = (student as any).submissionCount || 0;
     if (submissionCount >= 6) {
+      console.log(`[SUBMISSION] Failed submission attempt - Max limit reached for student: ${studentId} (${student.name || 'No name'})`);
       return NextResponse.json(
         {
           error:
@@ -35,6 +37,8 @@ export async function POST(request: Request) {
       );
     }
 
+    console.log(`[SUBMISSION] Creating submission for student: ${studentId} (${student.name || 'No name'}) - Attempt ${submissionCount + 1}/6`);
+
     // Calculate metrics
     const metrics = calculateMetrics(designChoices as DesignChoice[]);
 
@@ -43,7 +47,7 @@ export async function POST(request: Request) {
     try {
       aiReport = await generateReport(designChoices as DesignChoice[], metrics);
     } catch (error) {
-      console.error("AI report generation failed:", error);
+      console.error(`[SUBMISSION] AI report generation failed for student ${studentId}:`, error);
       // Set to null so the user can still see results without the report
       aiReport = null;
     }
@@ -68,6 +72,8 @@ export async function POST(request: Request) {
       }),
     ]);
 
+    console.log(`[SUBMISSION] Successfully created submission ${submission.id} for student: ${studentId} - Conversion Rate: ${metrics.conversionRate}%, ${6 - (submissionCount + 1)} attempts remaining`);
+
     return NextResponse.json({
       success: true,
       submission: {
@@ -87,7 +93,7 @@ export async function POST(request: Request) {
       remainingAttempts: 6 - (submissionCount + 1),
     });
   } catch (error) {
-    console.error("Submission error:", error);
+    console.error("[SUBMISSION] Submission error:", error);
     return NextResponse.json(
       { error: "Failed to process submission" },
       { status: 500 },
@@ -130,7 +136,7 @@ export async function GET(request: Request) {
       })),
     });
   } catch (error) {
-    console.error("Get submissions error:", error);
+    console.error("[SUBMISSION] Get submissions error:", error);
     return NextResponse.json(
       { error: "Failed to get submissions" },
       { status: 500 },

@@ -7,6 +7,8 @@ export async function POST(request: Request) {
   try {
     const { submissionId } = await request.json();
 
+    console.log(`[REPORT RETRY] Regenerating AI report for submission: ${submissionId}`);
+
     if (!submissionId) {
       return NextResponse.json(
         { error: "Submission ID is required" },
@@ -17,6 +19,14 @@ export async function POST(request: Request) {
     // Fetch the submission
     const submission = await prisma.submission.findUnique({
       where: { id: submissionId },
+      include: {
+        student: {
+          select: {
+            name: true,
+            studentId: true,
+          },
+        },
+      },
     });
 
     if (!submission) {
@@ -49,6 +59,8 @@ export async function POST(request: Request) {
       data: { aiReport },
     });
 
+    console.log(`[REPORT RETRY] Successfully regenerated AI report for submission ${submissionId} (Student: ${submission.studentId})`);
+
     return NextResponse.json({
       success: true,
       submission: {
@@ -67,7 +79,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    console.error("Retry report generation error:", error);
+    console.error("[REPORT RETRY] Retry report generation error:", error);
     return NextResponse.json(
       { error: "Failed to generate AI report" },
       { status: 500 },

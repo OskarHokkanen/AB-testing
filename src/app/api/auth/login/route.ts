@@ -23,6 +23,7 @@ export async function POST(request: Request) {
     });
 
     if (!student) {
+      console.log(`[AUTH] Failed login attempt - Student not found: ${studentId}`);
       return NextResponse.json(
         { error: "Student ID not found. Please contact your instructor." },
         { status: 401 },
@@ -30,6 +31,8 @@ export async function POST(request: Request) {
     }
 
     const submissionCount = (student as any).submissionCount || 0;
+
+    console.log(`[AUTH] Student logged in: ${studentId} (${student.name || 'No name'}) - ${submissionCount} submissions, ${6 - submissionCount} attempts remaining`);
 
     return NextResponse.json({
       success: true,
@@ -56,7 +59,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    console.error("Login error:", error);
+    console.error("[AUTH] Login error:", error);
     return NextResponse.json(
       { error: "Failed to authenticate" },
       { status: 500 },

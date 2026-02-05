@@ -18,6 +18,7 @@ export async function POST(request: Request) {
     });
 
     if (!admin) {
+      console.log(`[ADMIN AUTH] Failed login attempt - Invalid username: ${username}`);
       return NextResponse.json(
         { error: "Invalid credentials" },
         { status: 401 }
@@ -27,11 +28,14 @@ export async function POST(request: Request) {
     const isValid = await bcrypt.compare(password, admin.password);
 
     if (!isValid) {
+      console.log(`[ADMIN AUTH] Failed login attempt - Invalid password for username: ${username}`);
       return NextResponse.json(
         { error: "Invalid credentials" },
         { status: 401 }
       );
     }
+
+    console.log(`[ADMIN AUTH] Admin logged in: ${username}`);
 
     return NextResponse.json({
       success: true,
@@ -41,7 +45,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    console.error("Admin login error:", error);
+    console.error("[ADMIN AUTH] Admin login error:", error);
     return NextResponse.json({ error: "Login failed" }, { status: 500 });
   }
 }

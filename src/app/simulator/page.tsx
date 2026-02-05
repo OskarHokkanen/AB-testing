@@ -129,19 +129,11 @@ export default function SimulatorPage() {
 
     const loadDraft = async () => {
       try {
-        console.log("[Draft] Loading draft for student:", studentId);
         const response = await fetch(`/api/drafts?studentId=${studentId}`);
         const data = await response.json();
 
         if (data.success && data.draftDesignChoices.length > 0) {
-          console.log(
-            "[Draft] Loaded",
-            data.draftDesignChoices.length,
-            "design choices from draft",
-          );
           setDesignChoices(data.draftDesignChoices);
-        } else {
-          console.log("[Draft] No draft found or draft is empty");
         }
       } catch (error) {
         console.error("[Draft] Failed to load draft:", error);
@@ -154,11 +146,6 @@ export default function SimulatorPage() {
   const saveDraft = useCallback(async () => {
     if (!studentId) return;
 
-    console.log(
-      "[Draft] Saving draft with",
-      designChoices.length,
-      "design choices",
-    );
     setIsSavingDraft(true);
     try {
       const response = await fetch("/api/drafts", {
@@ -169,7 +156,6 @@ export default function SimulatorPage() {
 
       const data = await response.json();
       if (data.success) {
-        console.log("[Draft] Successfully saved draft");
         setLastSaved(new Date());
       } else {
         console.error("[Draft] Failed to save draft:", data.error);
@@ -184,12 +170,6 @@ export default function SimulatorPage() {
   // Auto-save draft when design choices change
   useEffect(() => {
     if (!studentId || selectedSubmission) {
-      console.log(
-        "[Draft] Auto-save skipped - studentId:",
-        studentId,
-        "selectedSubmission:",
-        !!selectedSubmission,
-      );
       return;
     }
 
@@ -198,7 +178,6 @@ export default function SimulatorPage() {
       clearTimeout(autoSaveTimerRef.current);
     }
 
-    console.log("[Draft] Auto-save scheduled in 2 seconds");
     // Set new timer to save after 2 seconds of inactivity
     autoSaveTimerRef.current = setTimeout(() => {
       saveDraft();
@@ -216,14 +195,11 @@ export default function SimulatorPage() {
     if (!studentId) return;
 
     try {
-      console.log("[Draft] Clearing draft for student:", studentId);
       const response = await fetch(`/api/drafts?studentId=${studentId}`, {
         method: "DELETE",
       });
       const data = await response.json();
-      if (data.success) {
-        console.log("[Draft] Successfully cleared draft");
-      } else {
+      if (!data.success) {
         console.error("[Draft] Failed to clear draft:", data.error);
       }
     } catch (error) {

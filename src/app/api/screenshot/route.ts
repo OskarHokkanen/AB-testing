@@ -8,6 +8,8 @@ export async function POST(request: Request) {
   try {
     const { submissionId, html } = await request.json();
 
+    console.log(`[SCREENSHOT] Generating screenshot for submission: ${submissionId}`);
+
     if (!submissionId || !html) {
       return NextResponse.json(
         { error: "Submission ID and HTML are required" },
@@ -39,7 +41,7 @@ export async function POST(request: Request) {
     try {
       await mkdir(screenshotsDir, { recursive: true });
     } catch (mkdirError) {
-      console.error("Error creating screenshots directory:", mkdirError);
+      console.error("[SCREENSHOT] Error creating screenshots directory:", mkdirError);
       // Continue anyway - directory might already exist
     }
 
@@ -49,7 +51,7 @@ export async function POST(request: Request) {
     try {
       await writeFile(filepath, screenshot);
     } catch (writeError) {
-      console.error("Error writing screenshot file:", writeError);
+      console.error("[SCREENSHOT] Error writing screenshot file:", writeError);
       throw new Error(`Failed to save screenshot: ${writeError instanceof Error ? writeError.message : String(writeError)}`);
     }
 
@@ -59,12 +61,14 @@ export async function POST(request: Request) {
       data: { screenshotPath: `/api/screenshots/${filename}` },
     });
 
+    console.log(`[SCREENSHOT] Successfully generated screenshot for submission: ${submissionId} - ${filename}`);
+
     return NextResponse.json({
       success: true,
       screenshotPath: `/api/screenshots/${filename}`,
     });
   } catch (error) {
-    console.error("Screenshot error:", error);
+    console.error("[SCREENSHOT] Screenshot error:", error);
     return NextResponse.json(
       { error: "Failed to generate screenshot" },
       { status: 500 },

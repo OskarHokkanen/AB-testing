@@ -6,6 +6,8 @@ export async function POST(request: Request) {
   try {
     const { count, namePrefix, startNumber, guidMode, guidPrefix, guidStartNumber } = await request.json();
 
+    console.log(`[ADMIN] Bulk creating ${count} students with mode: ${guidMode || 'random'}, namePrefix: ${namePrefix || 'none'}, guidPrefix: ${guidPrefix || 'none'}`);
+
     if (!count || typeof count !== "number" || count < 1 || count > 100) {
       return NextResponse.json(
         { error: "Count must be a number between 1 and 100" },
@@ -52,9 +54,11 @@ export async function POST(request: Request) {
         });
       } catch (error) {
         // Skip if GUID/ID already exists
-        console.error("Failed to create student with ID:", guid, error);
+        console.log(`[ADMIN] Skipped duplicate student ID: ${guid}`);
       }
     }
+
+    console.log(`[ADMIN] Successfully created ${createdStudents.length} out of ${count} students`);
 
     return NextResponse.json({
       success: true,
@@ -62,7 +66,7 @@ export async function POST(request: Request) {
       count: createdStudents.length,
     });
   } catch (error) {
-    console.error("Bulk create students error:", error);
+    console.error("[ADMIN] Bulk create students error:", error);
     return NextResponse.json(
       { error: "Failed to create students" },
       { status: 500 }
