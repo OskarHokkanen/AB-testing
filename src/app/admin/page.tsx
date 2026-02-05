@@ -67,6 +67,14 @@ export default function AdminPage() {
   const [guidPrefix, setGuidPrefix] = useState("");
   const [guidStartNumber, setGuidStartNumber] = useState(1);
 
+  // Delete confirmation state
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    submissionId: string;
+    studentId: string;
+    step: 1 | 2;
+  } | null>(null);
+  const [isDeletingSubmission, setIsDeletingSubmission] = useState(false);
+
   useEffect(() => {
     const adminData = sessionStorage.getItem("adminData");
     if (adminData) {
@@ -222,6 +230,32 @@ export default function AdminPage() {
       alert("Connection error");
     } finally {
       setIsGeneratingBulk(false);
+    }
+  };
+
+  const handleDeleteSubmission = async (submissionId: string) => {
+    setIsDeletingSubmission(true);
+    try {
+      const response = await fetch("/api/admin/submissions", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ submissionId }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Reload students to update the list
+        await loadStudents();
+        setDeleteConfirmation(null);
+      } else {
+        alert(`Failed to delete submission: ${data.error}`);
+      }
+    } catch (error) {
+      console.error("Delete submission error:", error);
+      alert("Failed to delete submission");
+    } finally {
+      setIsDeletingSubmission(false);
     }
   };
 
@@ -603,15 +637,29 @@ export default function AdminPage() {
                                     submission.createdAt,
                                   ).toLocaleString()}
                                 </span>
-                                <button
-                                  onClick={() =>
-                                    setSelectedSubmission(submission)
-                                  }
-                                  className="flex items-center space-x-1 text-indigo-600 hover:text-indigo-800 text-sm"
-                                >
-                                  <Eye className="w-4 h-4" />
-                                  <span>View Details</span>
-                                </button>
+                                <div className="flex items-center space-x-2">
+                                  <button
+                                    onClick={() =>
+                                      setSelectedSubmission(submission)
+                                    }
+                                    className="flex items-center space-x-1 text-indigo-600 hover:text-indigo-800 text-sm"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                    <span>View Details</span>
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      setDeleteConfirmation({
+                                        submissionId: submission.id,
+                                        studentId: student.studentId,
+                                        step: 1,
+                                      })
+                                    }
+                                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
                               </div>
                               <div className="grid grid-cols-5 gap-2 text-sm">
                                 <div>
@@ -849,6 +897,79 @@ export default function AdminPage() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {deleteConfirmation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => !isDeletingSubmission && setDeleteConfirmation(null)}
+          />
+          <div className="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
+                <Trash2 className="w-8 h-8 text-red-600" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">
+                {deleteConfirmation.step === 1
+                  ? "Delete Submission?"
+                  : "Are you absolutely sure?"}
+              </h2>
+              <p className="text-gray-600">
+                {deleteConfirmation.step === 1 ? (
+                  <>
+                    This will permanently delete this submission for student{" "}
+                    <span className="font-semibold">
+                      {deleteConfirmation.studentId}
+                    </span>
+                    .
+                  </>
+                ) : (
+                  <>
+                    This action <span className="font-semibold">cannot be undone</span>. The
+                    submission data and associated screenshot will be permanently removed.
+                  </>
+                )}
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirmation(null)}
+                disabled={isDeletingSubmission}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (deleteConfirmation.step === 1) {
+                    setDeleteConfirmation({
+                      ...deleteConfirmation,
+                      step: 2,
+                    });
+                  } else {
+                    handleDeleteSubmission(deleteConfirmation.submissionId);
+                  }
+                }}
+                disabled={isDeletingSubmission}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center justify-center space-x-2"
+              >
+                {isDeletingSubmission ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <span>
+                    {deleteConfirmation.step === 1 ? "Continue" : "Delete Permanently"}
+                  </span>
+                )}
+              </button>
             </div>
           </div>
         </div>
