@@ -4,7 +4,7 @@ import crypto from "crypto";
 
 export async function POST(request: Request) {
   try {
-    const { count, namePrefix, startNumber } = await request.json();
+    const { count, namePrefix, startNumber, guidMode, guidPrefix, guidStartNumber } = await request.json();
 
     if (!count || typeof count !== "number" || count < 1 || count > 100) {
       return NextResponse.json(
@@ -14,11 +14,22 @@ export async function POST(request: Request) {
     }
 
     const start = typeof startNumber === "number" ? startNumber : 1;
+    const mode = guidMode || "random";
+    const idPrefix = guidPrefix || "";
+    const idStart = typeof guidStartNumber === "number" ? guidStartNumber : 1;
     const createdStudents = [];
 
     for (let i = 0; i < count; i++) {
-      // Generate a random GUID
-      const guid = crypto.randomUUID();
+      // Generate GUID based on mode
+      let guid: string;
+      if (mode === "custom") {
+        // Generate custom sequential ID
+        const number = idStart + i;
+        guid = idPrefix ? `${idPrefix}${number}` : `${number}`;
+      } else {
+        // Generate a random GUID
+        guid = crypto.randomUUID();
+      }
 
       // Generate name if prefix is provided
       const name = namePrefix ? `${namePrefix} ${start + i}` : null;
@@ -40,8 +51,8 @@ export async function POST(request: Request) {
           submissions: [],
         });
       } catch (error) {
-        // Skip if GUID already exists (extremely unlikely)
-        console.error("Failed to create student with GUID:", guid, error);
+        // Skip if GUID/ID already exists
+        console.error("Failed to create student with ID:", guid, error);
       }
     }
 

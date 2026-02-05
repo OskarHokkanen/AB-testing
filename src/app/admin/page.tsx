@@ -63,6 +63,9 @@ export default function AdminPage() {
   const [bulkNamePrefix, setBulkNamePrefix] = useState("");
   const [bulkStartNumber, setBulkStartNumber] = useState(1);
   const [isGeneratingBulk, setIsGeneratingBulk] = useState(false);
+  const [guidMode, setGuidMode] = useState<"random" | "custom">("random");
+  const [guidPrefix, setGuidPrefix] = useState("");
+  const [guidStartNumber, setGuidStartNumber] = useState(1);
 
   useEffect(() => {
     const adminData = sessionStorage.getItem("adminData");
@@ -193,6 +196,9 @@ export default function AdminPage() {
           count: bulkCount,
           namePrefix: bulkNamePrefix.trim() || null,
           startNumber: bulkStartNumber,
+          guidMode: guidMode,
+          guidPrefix: guidPrefix.trim() || null,
+          guidStartNumber: guidStartNumber,
         }),
       });
 
@@ -204,8 +210,11 @@ export default function AdminPage() {
           ? ` named "${bulkNamePrefix} ${bulkStartNumber}" to "${bulkNamePrefix} ${bulkStartNumber + data.count - 1}"`
           : "";
         alert(`Successfully created ${data.count} students${nameInfo}`);
-        // Update start number for next batch
+        // Update start numbers for next batch
         setBulkStartNumber(bulkStartNumber + data.count);
+        if (guidMode === "custom") {
+          setGuidStartNumber(guidStartNumber + data.count);
+        }
       } else {
         alert(data.error || "Failed to generate students");
       }
@@ -376,10 +385,35 @@ export default function AdminPage() {
             Bulk Generate Students
           </h2>
           <p className="text-sm text-gray-500 mb-4">
-            Generate multiple students with randomly generated GUIDs as their
-            student IDs. Optionally assign names with a prefix (e.g.,
-            &quot;User&quot;, &quot;Group&quot;, &quot;Student&quot;).
+            Generate multiple students with either randomly generated GUIDs or custom sequential IDs.
+            Optionally assign names with a prefix (e.g., &quot;User&quot;, &quot;Group&quot;, &quot;Student&quot;).
           </p>
+          
+          {/* GUID Mode Selection */}
+          <div className="mb-4 flex gap-4">
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="radio"
+                name="guidMode"
+                value="random"
+                checked={guidMode === "random"}
+                onChange={(e) => setGuidMode(e.target.value as "random")}
+                className="w-4 h-4 text-indigo-600"
+              />
+              <span className="text-sm text-gray-700">Random GUIDs</span>
+            </label>
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="radio"
+                name="guidMode"
+                value="custom"
+                checked={guidMode === "custom"}
+                onChange={(e) => setGuidMode(e.target.value as "custom")}
+                className="w-4 h-4 text-indigo-600"
+              />
+              <span className="text-sm text-gray-700">Custom Sequential IDs</span>
+            </label>
+          </div>
           <div className="flex flex-wrap gap-4 items-end">
             <div className="flex flex-col gap-1">
               <label htmlFor="bulkCount" className="text-sm text-gray-600">
@@ -430,6 +464,41 @@ export default function AdminPage() {
                 className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
               />
             </div>
+            
+            {/* Custom GUID fields - only show if custom mode selected */}
+            {guidMode === "custom" && (
+              <>
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="guidPrefix" className="text-sm text-gray-600">
+                    ID Prefix (optional)
+                  </label>
+                  <input
+                    type="text"
+                    id="guidPrefix"
+                    placeholder="e.g., STU, ID"
+                    value={guidPrefix}
+                    onChange={(e) => setGuidPrefix(e.target.value)}
+                    className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="guidStartNumber" className="text-sm text-gray-600">
+                    ID Start #
+                  </label>
+                  <input
+                    type="number"
+                    id="guidStartNumber"
+                    min={1}
+                    value={guidStartNumber}
+                    onChange={(e) =>
+                      setGuidStartNumber(Math.max(1, parseInt(e.target.value) || 1))
+                    }
+                    className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </>
+            )}
+            
             <button
               type="button"
               onClick={handleBulkGenerate}
