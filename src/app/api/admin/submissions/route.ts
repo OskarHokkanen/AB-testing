@@ -63,10 +63,20 @@ export async function DELETE(request: Request) {
       );
     }
 
-    // Delete the submission from database
-    await prisma.submission.delete({
-      where: { id: submissionId },
-    });
+    // Delete the submission from database and decrement submission count
+    await prisma.$transaction([
+      prisma.submission.delete({
+        where: { id: submissionId },
+      }),
+      prisma.student.update({
+        where: { studentId: submission.studentId },
+        data: {
+          submissionCount: {
+            decrement: 1,
+          },
+        },
+      }),
+    ]);
 
     // Clean up screenshot file if it exists
     if (submission.screenshotPath) {
