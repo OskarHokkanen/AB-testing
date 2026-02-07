@@ -13,6 +13,12 @@ import {
   LogOut,
   Loader2,
   Eye,
+  TrendingUp,
+  TrendingDown,
+  Clock,
+  MousePointer,
+  ShoppingCart,
+  Users as UsersIcon,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -41,6 +47,73 @@ interface Student {
   createdAt: string;
   submissionCount: number;
   submissions: Submission[];
+}
+
+// Baseline metrics for comparison
+const BASELINE = {
+  conversionRate: 2.5,
+  bounceRate: 45,
+  clickThroughRate: 3.5,
+  avgTimeOnPage: 120,
+  cartAbandonmentRate: 70,
+};
+
+function MetricCard({
+  label,
+  value,
+  baseline,
+  unit,
+  icon: Icon,
+  lowerIsBetter = false,
+}: {
+  label: string;
+  value: number;
+  baseline: number;
+  unit: string;
+  icon: React.ElementType;
+  lowerIsBetter?: boolean;
+}) {
+  const diff = value - baseline;
+  const percentChange = ((diff / baseline) * 100).toFixed(1);
+  const isImproved = lowerIsBetter ? diff < 0 : diff > 0;
+  const isWorse = lowerIsBetter ? diff > 0 : diff < 0;
+
+  return (
+    <div className="bg-white rounded-lg p-4 border border-gray-200">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center space-x-2 text-gray-600">
+          <Icon className="w-5 h-5" />
+          <span className="text-sm font-medium">{label}</span>
+        </div>
+        {diff !== 0 && (
+          <div
+            className={`flex items-center text-sm ${
+              isImproved
+                ? "text-green-600"
+                : isWorse
+                  ? "text-red-600"
+                  : "text-gray-500"
+            }`}
+          >
+            {isImproved ? (
+              <TrendingUp className="w-4 h-4 mr-1" />
+            ) : (
+              <TrendingDown className="w-4 h-4 mr-1" />
+            )}
+            {Math.abs(Number(percentChange))}%
+          </div>
+        )}
+      </div>
+      <div className="text-2xl font-bold text-gray-900">
+        {value}
+        {unit}
+      </div>
+      <div className="text-sm text-gray-500 mt-1">
+        Baseline: {baseline}
+        {unit}
+      </div>
+    </div>
+  );
 }
 
 export default function AdminPage() {
@@ -662,35 +735,110 @@ export default function AdminPage() {
                                 </div>
                               </div>
                               <div className="grid grid-cols-5 gap-2 text-sm">
-                                <div>
-                                  <span className="text-gray-500">Conv:</span>{" "}
-                                  <span className="font-medium">
+                                <div className="space-y-1">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-gray-500">Conv:</span>
+                                    {(() => {
+                                      const diff = submission.metrics.conversionRate - BASELINE.conversionRate;
+                                      const percentChange = ((diff / BASELINE.conversionRate) * 100).toFixed(1);
+                                      const isImproved = diff > 0;
+                                      return diff !== 0 ? (
+                                        <span className={`text-xs ${isImproved ? 'text-green-600' : 'text-red-600'}`}>
+                                          {isImproved ? '↑' : '↓'}{Math.abs(Number(percentChange))}%
+                                        </span>
+                                      ) : null;
+                                    })()}
+                                  </div>
+                                  <div className="font-medium">
                                     {submission.metrics.conversionRate}%
-                                  </span>
+                                  </div>
+                                  <div className="text-xs text-gray-400">
+                                    Base: {BASELINE.conversionRate}%
+                                  </div>
                                 </div>
-                                <div>
-                                  <span className="text-gray-500">Bounce:</span>{" "}
-                                  <span className="font-medium">
+                                <div className="space-y-1">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-gray-500">Bounce:</span>
+                                    {(() => {
+                                      const diff = submission.metrics.bounceRate - BASELINE.bounceRate;
+                                      const percentChange = ((diff / BASELINE.bounceRate) * 100).toFixed(1);
+                                      const isImproved = diff < 0;
+                                      return diff !== 0 ? (
+                                        <span className={`text-xs ${isImproved ? 'text-green-600' : 'text-red-600'}`}>
+                                          {isImproved ? '↓' : '↑'}{Math.abs(Number(percentChange))}%
+                                        </span>
+                                      ) : null;
+                                    })()}
+                                  </div>
+                                  <div className="font-medium">
                                     {submission.metrics.bounceRate}%
-                                  </span>
+                                  </div>
+                                  <div className="text-xs text-gray-400">
+                                    Base: {BASELINE.bounceRate}%
+                                  </div>
                                 </div>
-                                <div>
-                                  <span className="text-gray-500">CTR:</span>{" "}
-                                  <span className="font-medium">
+                                <div className="space-y-1">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-gray-500">CTR:</span>
+                                    {(() => {
+                                      const diff = submission.metrics.clickThroughRate - BASELINE.clickThroughRate;
+                                      const percentChange = ((diff / BASELINE.clickThroughRate) * 100).toFixed(1);
+                                      const isImproved = diff > 0;
+                                      return diff !== 0 ? (
+                                        <span className={`text-xs ${isImproved ? 'text-green-600' : 'text-red-600'}`}>
+                                          {isImproved ? '↑' : '↓'}{Math.abs(Number(percentChange))}%
+                                        </span>
+                                      ) : null;
+                                    })()}
+                                  </div>
+                                  <div className="font-medium">
                                     {submission.metrics.clickThroughRate}%
-                                  </span>
+                                  </div>
+                                  <div className="text-xs text-gray-400">
+                                    Base: {BASELINE.clickThroughRate}%
+                                  </div>
                                 </div>
-                                <div>
-                                  <span className="text-gray-500">Time:</span>{" "}
-                                  <span className="font-medium">
+                                <div className="space-y-1">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-gray-500">Time:</span>
+                                    {(() => {
+                                      const diff = submission.metrics.avgTimeOnPage - BASELINE.avgTimeOnPage;
+                                      const percentChange = ((diff / BASELINE.avgTimeOnPage) * 100).toFixed(1);
+                                      const isImproved = diff > 0;
+                                      return diff !== 0 ? (
+                                        <span className={`text-xs ${isImproved ? 'text-green-600' : 'text-red-600'}`}>
+                                          {isImproved ? '↑' : '↓'}{Math.abs(Number(percentChange))}%
+                                        </span>
+                                      ) : null;
+                                    })()}
+                                  </div>
+                                  <div className="font-medium">
                                     {submission.metrics.avgTimeOnPage}s
-                                  </span>
+                                  </div>
+                                  <div className="text-xs text-gray-400">
+                                    Base: {BASELINE.avgTimeOnPage}s
+                                  </div>
                                 </div>
-                                <div>
-                                  <span className="text-gray-500">Cart:</span>{" "}
-                                  <span className="font-medium">
+                                <div className="space-y-1">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-gray-500">Cart:</span>
+                                    {(() => {
+                                      const diff = submission.metrics.cartAbandonmentRate - BASELINE.cartAbandonmentRate;
+                                      const percentChange = ((diff / BASELINE.cartAbandonmentRate) * 100).toFixed(1);
+                                      const isImproved = diff < 0;
+                                      return diff !== 0 ? (
+                                        <span className={`text-xs ${isImproved ? 'text-green-600' : 'text-red-600'}`}>
+                                          {isImproved ? '↓' : '↑'}{Math.abs(Number(percentChange))}%
+                                        </span>
+                                      ) : null;
+                                    })()}
+                                  </div>
+                                  <div className="font-medium">
                                     {submission.metrics.cartAbandonmentRate}%
-                                  </span>
+                                  </div>
+                                  <div className="text-xs text-gray-400">
+                                    Base: {BASELINE.cartAbandonmentRate}%
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -753,38 +901,45 @@ export default function AdminPage() {
 
               {/* Metrics */}
               <div className="mb-6">
-                <h3 className="font-medium text-gray-900 mb-3">Metrics</h3>
-                <div className="grid grid-cols-5 gap-4">
-                  <div className="bg-gray-50 rounded-lg p-3 text-center">
-                    <p className="text-2xl font-bold text-gray-900">
-                      {selectedSubmission.metrics.conversionRate}%
-                    </p>
-                    <p className="text-sm text-gray-500">Conversion</p>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-3 text-center">
-                    <p className="text-2xl font-bold text-gray-900">
-                      {selectedSubmission.metrics.bounceRate}%
-                    </p>
-                    <p className="text-sm text-gray-500">Bounce</p>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-3 text-center">
-                    <p className="text-2xl font-bold text-gray-900">
-                      {selectedSubmission.metrics.clickThroughRate}%
-                    </p>
-                    <p className="text-sm text-gray-500">CTR</p>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-3 text-center">
-                    <p className="text-2xl font-bold text-gray-900">
-                      {selectedSubmission.metrics.avgTimeOnPage}s
-                    </p>
-                    <p className="text-sm text-gray-500">Time</p>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-3 text-center">
-                    <p className="text-2xl font-bold text-gray-900">
-                      {selectedSubmission.metrics.cartAbandonmentRate}%
-                    </p>
-                    <p className="text-sm text-gray-500">Cart Abandon</p>
-                  </div>
+                <h3 className="font-medium text-gray-900 mb-3">Performance Metrics</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <MetricCard
+                    label="Conversion Rate"
+                    value={selectedSubmission.metrics.conversionRate}
+                    baseline={BASELINE.conversionRate}
+                    unit="%"
+                    icon={TrendingUp}
+                  />
+                  <MetricCard
+                    label="Bounce Rate"
+                    value={selectedSubmission.metrics.bounceRate}
+                    baseline={BASELINE.bounceRate}
+                    unit="%"
+                    icon={UsersIcon}
+                    lowerIsBetter
+                  />
+                  <MetricCard
+                    label="Click-Through Rate"
+                    value={selectedSubmission.metrics.clickThroughRate}
+                    baseline={BASELINE.clickThroughRate}
+                    unit="%"
+                    icon={MousePointer}
+                  />
+                  <MetricCard
+                    label="Avg. Time on Page"
+                    value={selectedSubmission.metrics.avgTimeOnPage}
+                    baseline={BASELINE.avgTimeOnPage}
+                    unit="s"
+                    icon={Clock}
+                  />
+                  <MetricCard
+                    label="Cart Abandonment"
+                    value={selectedSubmission.metrics.cartAbandonmentRate}
+                    baseline={BASELINE.cartAbandonmentRate}
+                    unit="%"
+                    icon={ShoppingCart}
+                    lowerIsBetter
+                  />
                 </div>
               </div>
 
