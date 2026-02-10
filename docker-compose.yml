@@ -1,6 +1,23 @@
 version: "3.8"
 
 services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=abtesting
+      - POSTGRES_PASSWORD=abtesting_password
+      - POSTGRES_DB=abtesting
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U abtesting"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   web:
     build:
       context: .
@@ -12,15 +29,16 @@ services:
       - "3002:3000"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=file:/app/prisma/dev.db
+      - DATABASE_URL=postgresql://abtesting:abtesting_password@db:5432/abtesting
       - OPENAI_BASE_URL=${OPENAI_BASE_URL}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
     volumes:
-      # Persist the SQLite database
-      - ./prisma:/app/prisma
       # Persist screenshots
       - ./public/screenshots:/app/public/screenshots
+    depends_on:
+      db:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test:
@@ -36,3 +54,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+volumes:
+  postgres_data:

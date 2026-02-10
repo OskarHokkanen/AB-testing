@@ -1,6 +1,23 @@
 version: "3.8"
 
 services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=abtesting
+      - POSTGRES_PASSWORD=abtesting_password
+      - POSTGRES_DB=abtesting
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U abtesting"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   web:
     build:
       context: .
@@ -11,7 +28,7 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=file:/app/prisma/dev.db
+      - DATABASE_URL=postgresql://abtesting:abtesting_password@db:5432/abtesting
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=false
     volumes:
@@ -26,4 +43,10 @@ services:
       # Prevent node_modules from being overwritten
       - /app/node_modules
       - /app/.next
+    depends_on:
+      db:
+        condition: service_healthy
     restart: unless-stopped
+
+volumes:
+  postgres_data_dev:

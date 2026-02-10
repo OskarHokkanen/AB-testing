@@ -140,7 +140,7 @@ npm run dev
 - **Framework**: Next.js 15 with App Router
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
-- **Database**: SQLite with Prisma ORM
+- **Database**: PostgreSQL with Prisma ORM (migrated from SQLite)
 - **AI**: Any OpenAI API compatible 
 - **Screenshots**: Puppeteer (server-side)
 - **Icons**: Lucide React
@@ -197,8 +197,11 @@ AB-testing/
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `DATABASE_URL` | SQLite database path | Yes |
+| `DATABASE_URL` | PostgreSQL connection string | Yes |
 | `OPENAI_API_KEY` | OpenAI API key | Yes |
+| `POSTGRES_USER` | PostgreSQL username (for Docker) | Yes |
+| `POSTGRES_PASSWORD` | PostgreSQL password (for Docker) | Yes |
+| `POSTGRES_DB` | PostgreSQL database name (for Docker) | Yes |
 
 ### Metrics Calculation
 
@@ -207,6 +210,32 @@ The metrics calculation engine in `src/lib/metrics.ts` contains weighted values 
 - Some choices improve certain metrics while worsening others
 - The weights are designed to be educational and realistic
 - Final metrics are clamped to reasonable ranges
+
+## Database Migration
+
+This project has been migrated from SQLite to PostgreSQL for better production deployment and remote database management.
+
+### Migrating from SQLite to PostgreSQL
+
+If you're upgrading from an older version that used SQLite:
+
+1. See **[POSTGRESQL_MIGRATION.md](POSTGRESQL_MIGRATION.md)** for detailed migration instructions
+2. Run the automated migration script:
+   ```bash
+   ./migrate-to-postgresql.sh
+   ```
+
+### Connecting with DBeaver or Database Management Tools
+
+With PostgreSQL, you can now easily connect using tools like DBeaver:
+
+- **Host**: your-server-ip
+- **Port**: 5432
+- **Database**: abtesting
+- **Username**: abtesting
+- **Password**: abtesting_password (⚠️ change in production!)
+
+For detailed instructions, see **[POSTGRESQL_MIGRATION.md](POSTGRESQL_MIGRATION.md)**.
 
 ## Deployment
 
@@ -218,6 +247,12 @@ Quick deployment:
 ```bash
 docker-compose up -d
 ```
+
+The Docker setup now includes:
+- PostgreSQL 16 database service
+- Automatic database migrations
+- Persistent data volumes
+- Health checks
 
 ### Vercel
 

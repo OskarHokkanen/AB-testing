@@ -54,7 +54,7 @@ ENV ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
 # Copy node_modules for Prisma CLI access
 COPY --from=deps /app/node_modules ./node_modules
 
-# Install chromium for Puppeteer and su-exec for user switching
+# Install chromium for Puppeteer, PostgreSQL client, and su-exec for user switching
 RUN apk add --no-cache \
     chromium \
     nss \
@@ -62,6 +62,7 @@ RUN apk add --no-cache \
     harfbuzz \
     ca-certificates \
     ttf-freefont \
+    postgresql-client \
     su-exec
 
 # Tell Puppeteer to use the installed chromium package
@@ -88,9 +89,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # Create screenshots directory with proper permissions BEFORE changing user
 RUN mkdir -p ./public/screenshots && chown -R nextjs:nodejs ./public
 
-# Create data directory for SQLite database
-RUN mkdir -p ./prisma
-RUN chown -R nextjs:nodejs ./prisma
+# Note: PostgreSQL data is stored in the db service, not in the app container
 
 # Copy entrypoint script
 COPY --chown=root:root entrypoint.sh /entrypoint.sh
